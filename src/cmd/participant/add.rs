@@ -76,5 +76,5 @@ fn normalize_pet_name(pet_name: Option<String>) -> Result<Option<String>> {
 }
 
 fn participants_file_path() -> Result<PathBuf> {
-    Ok(std::env::current_dir()?.join("particiapants.json"))
+    Ok(std::env::current_dir()?.join("registry.json"))
 }

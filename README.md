@@ -9,9 +9,9 @@ frost participant add <XID_DOCUMENT> [<PET_NAME>]
 ```
 
 - `XID_DOCUMENT` must be a valid `ur:xid` string representing an `XIDDocument` that is signed by its inception key.
-- `PET_NAME` is an optional human-readable alias. If provided it must be unique within the current directory's `particiapants.json` registry.
+- `PET_NAME` is an optional human-readable alias. If provided it must be unique within the current directory's `registry.json` registry.
 
-The command stores the participant details in `particiapants.json` within the current working directory, creating the file if it does not exist. Re-running the same command with identical arguments is idempotent.
+The command stores the participant details in `registry.json` within the current working directory, creating the file if it does not exist. Re-running the same command with identical arguments is idempotent.
 
 ## License
 

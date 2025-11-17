@@ -123,7 +123,7 @@ fn fixture(name: &str) -> String {
 }
 
 fn participants_file(dir: &Path) -> std::path::PathBuf {
-    dir.join("particiapants.json")
+    dir.join("registry.json")
 }
 
 fn assert_registry_matches(actual: &str, expected: &str) {
