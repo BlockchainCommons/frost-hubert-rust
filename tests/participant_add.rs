@@ -17,6 +17,22 @@ const ALICE_REGISTRY_JSON: &str = indoc! {r#"
 }
 "#};
 
+#[rustfmt::skip]
+const ALICE_AND_BOB_REGISTRY_JSON: &str = indoc! {r#"
+{
+    "participants": {
+        "ur:xid/hdcxuysflgfsmwjseozmhplehywpwdcnfwmtvskkkbtieerpsfmtwegoiysaeeylfsecdsfxhljz": {
+            "public_keys": "ur:crypto-pubkeys/lftanshfhdcxtoiniabgotbtltwpfgnbcxlybznngywkfsflbabyamadwmuefgtyjecxmteefxjntansgrhdcxbatpyafttpyabewkcmutihvesklrhytehydavdimwpahbalnnsrsnyfzpkcehpfhyncwehrl",
+            "pet_name": "Bob"
+        },
+        "ur:xid/hdcxwmkbiywnmkwdlprdjliowtdkprkpbszodnlychyklapdjzrohnwpwecefglolsbsfnpkjony": {
+            "public_keys": "ur:crypto-pubkeys/lftanshfhdcxswkeatmoclaehlpezsprtkntgrparfihgosofmfnlrgltndysabkwlckykimemottansgrhdcxtnhluevohylpdadednfmrsdkcfvovdsfaaadpecllftytbhgmylapkbarsfhdthskklysacn",
+            "pet_name": "Alice"
+        }
+    }
+}
+"#};
+
 #[test]
 fn participant_add_creates_registry_and_is_idempotent() {
     let temp = TempDir::new().unwrap();
@@ -56,6 +72,24 @@ fn participant_add_conflicting_pet_name_fails() {
 
     let content = fs::read_to_string(participants_file(temp.path())).unwrap();
     assert_registry_matches(&content, ALICE_REGISTRY_JSON);
+}
+
+#[test]
+fn participant_add_records_multiple_participants() {
+    let temp = TempDir::new().unwrap();
+    let alice = fixture("alice_signed_xid.txt");
+    let bob = fixture("bob_signed_xid.txt");
+
+    run_frost(temp.path(), &["participant", "add", &alice, "Alice"])
+        .assert()
+        .success();
+
+    run_frost(temp.path(), &["participant", "add", &bob, "Bob"])
+        .assert()
+        .success();
+
+    let content = fs::read_to_string(participants_file(temp.path())).unwrap();
+    assert_registry_matches(&content, ALICE_AND_BOB_REGISTRY_JSON);
 }
 
 #[test]
