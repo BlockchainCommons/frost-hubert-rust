@@ -68,22 +68,23 @@ impl ParticipantsFile {
         xid: XID,
         record: ParticipantRecord,
     ) -> Result<AddOutcome> {
-        if let Some(name) = record.pet_name() {
-            if let Some((existing_xid, existing_record)) = self
-                .participants
-                .iter()
-                .find(|(_, rec)| rec.pet_name() == Some(name))
-            {
-                if *existing_xid != xid {
-                    bail!(
-                        "Pet name '{name}' already used by another participant"
-                    );
-                }
-                if existing_record.public_keys() == record.public_keys() {
-                    return Ok(AddOutcome::AlreadyPresent);
-                }
-                bail!("Participant already exists with a different pet name");
+        if let Some((name, existing_xid, existing_record)) =
+            record.pet_name().and_then(|name| {
+                self.participants
+                    .iter()
+                    .find(|(_, rec)| rec.pet_name() == Some(name))
+                    .map(|(existing_xid, existing_record)| {
+                        (name, existing_xid, existing_record)
+                    })
+            })
+        {
+            if *existing_xid != xid {
+                bail!("Pet name '{name}' already used by another participant");
             }
+            if existing_record.public_keys() == record.public_keys() {
+                return Ok(AddOutcome::AlreadyPresent);
+            }
+            bail!("Participant already exists with a different pet name");
         }
 
         match self.participants.get(&xid) {
