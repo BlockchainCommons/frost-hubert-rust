@@ -1,30 +1,21 @@
 use std::{fs, path::Path};
 
 use assert_cmd::Command;
+use indoc::indoc;
 use predicates::prelude::*;
 use tempfile::TempDir;
 
 #[rustfmt::skip]
-const ALICE_REGISTRY_JSON: &str = r#"{
+const ALICE_REGISTRY_JSON: &str = indoc! {r#"
+{
     "participants": {
-        "eb7e66f198ea85ba6f67f024b2750ffb2b8117f580a86cb860eced1c4688830f": {
+        "ur:xid/hdcxwmkbiywnmkwdlprdjliowtdkprkpbszodnlychyklapdjzrohnwpwecefglolsbsfnpkjony": {
             "public_keys": "ur:crypto-pubkeys/lftanshfhdcxswkeatmoclaehlpezsprtkntgrparfihgosofmfnlrgltndysabkwlckykimemottansgrhdcxtnhluevohylpdadednfmrsdkcfvovdsfaaadpecllftytbhgmylapkbarsfhdthskklysacn",
             "pet_name": "Alice"
         }
     }
 }
-"#;
-
-#[rustfmt::skip]
-const SHARED_REGISTRY_JSON: &str = r#"{
-    "participants": {
-        "eb7e66f198ea85ba6f67f024b2750ffb2b8117f580a86cb860eced1c4688830f": {
-            "public_keys": "ur:crypto-pubkeys/lftanshfhdcxswkeatmoclaehlpezsprtkntgrparfihgosofmfnlrgltndysabkwlckykimemottansgrhdcxtnhluevohylpdadednfmrsdkcfvovdsfaaadpecllftytbhgmylapkbarsfhdthskklysacn",
-            "pet_name": "shared"
-        }
-    }
-}
-"#;
+"#};
 
 #[test]
 fn participant_add_creates_registry_and_is_idempotent() {
@@ -54,17 +45,17 @@ fn participant_add_conflicting_pet_name_fails() {
     let alice = fixture("alice_signed_xid.txt");
     let bob = fixture("bob_signed_xid.txt");
 
-    run_frost(temp.path(), &["participant", "add", &alice, "shared"])
+    run_frost(temp.path(), &["participant", "add", &alice, "Alice"])
         .assert()
         .success();
 
-    run_frost(temp.path(), &["participant", "add", &bob, "shared"])
+    run_frost(temp.path(), &["participant", "add", &bob, "Alice"])
         .assert()
         .failure()
         .stderr(predicate::str::contains("already used"));
 
     let content = fs::read_to_string(participants_file(temp.path())).unwrap();
-    assert_registry_matches(&content, SHARED_REGISTRY_JSON);
+    assert_registry_matches(&content, ALICE_REGISTRY_JSON);
 }
 
 #[test]

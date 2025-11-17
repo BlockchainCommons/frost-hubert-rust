@@ -146,7 +146,7 @@ mod serde_participants_map {
     {
         let mut state = serializer.serialize_map(Some(map.len()))?;
         for (xid, record) in map {
-            state.serialize_entry(&xid.to_hex(), record)?;
+            state.serialize_entry(&xid.ur_string(), record)?;
         }
         state.end()
     }
@@ -160,11 +160,9 @@ mod serde_participants_map {
         let raw: BTreeMap<String, ParticipantRecord> =
             BTreeMap::deserialize(deserializer)?;
         raw.into_iter()
-            .map(|(hex, record)| {
-                let bytes =
-                    hex::decode(&hex).map_err(serde::de::Error::custom)?;
-                let xid = XID::from_data_ref(&bytes)
-                    .map_err(|err| serde::de::Error::custom(err.to_string()))?;
+            .map(|(ur, record)| {
+                let xid = XID::from_ur_string(&ur)
+                    .map_err(serde::de::Error::custom)?;
                 Ok((xid, record))
             })
             .collect()
