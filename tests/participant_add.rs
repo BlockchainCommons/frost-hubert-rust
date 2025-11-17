@@ -56,6 +56,73 @@ fn participant_add_creates_registry_and_is_idempotent() {
 }
 
 #[test]
+fn participant_add_supports_custom_registry_filename_in_cwd() {
+    let temp = TempDir::new().unwrap();
+    let alice = fixture("alice_signed_xid.txt");
+    let registry_name = "alice_registry.json";
+
+    run_frost(
+        temp.path(),
+        &[
+            "participant",
+            "add",
+            &alice,
+            "Alice",
+            "--registry",
+            registry_name,
+        ],
+    )
+    .assert()
+    .success();
+
+    let path = temp.path().join(registry_name);
+    let content = fs::read_to_string(path).unwrap();
+    assert_registry_matches(&content, ALICE_REGISTRY_JSON);
+}
+
+#[test]
+fn participant_add_supports_directory_registry_path() {
+    let temp = TempDir::new().unwrap();
+    let alice = fixture("alice_signed_xid.txt");
+
+    run_frost(
+        temp.path(),
+        &[
+            "participant",
+            "add",
+            &alice,
+            "Alice",
+            "--registry",
+            "registries/",
+        ],
+    )
+    .assert()
+    .success();
+
+    let path = temp.path().join("registries").join("registry.json");
+    let content = fs::read_to_string(path).unwrap();
+    assert_registry_matches(&content, ALICE_REGISTRY_JSON);
+}
+
+#[test]
+fn participant_add_supports_path_with_custom_filename() {
+    let temp = TempDir::new().unwrap();
+    let alice = fixture("alice_signed_xid.txt");
+    let arg = "registries/alice_registry.json";
+
+    run_frost(
+        temp.path(),
+        &["participant", "add", &alice, "Alice", "--registry", arg],
+    )
+    .assert()
+    .success();
+
+    let path = temp.path().join("registries").join("alice_registry.json");
+    let content = fs::read_to_string(path).unwrap();
+    assert_registry_matches(&content, ALICE_REGISTRY_JSON);
+}
+
+#[test]
 fn participant_add_conflicting_pet_name_fails() {
     let temp = TempDir::new().unwrap();
     let alice = fixture("alice_signed_xid.txt");

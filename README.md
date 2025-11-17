@@ -5,13 +5,14 @@
 ## Usage
 
 ```
-frost participant add <XID_DOCUMENT> [<PET_NAME>]
+frost participant add [--registry <PATH>] <XID_DOCUMENT> [<PET_NAME>]
 ```
 
 - `XID_DOCUMENT` must be a valid `ur:xid` string representing an `XIDDocument` that is signed by its inception key.
 - `PET_NAME` is an optional human-readable alias. If provided it must be unique within the current directory's `registry.json` registry.
+- `--registry <PATH>` overrides where the participant registry is stored. Provide just a filename to keep it in the current directory, a directory path ending in `/` to use the default `registry.json` within that directory, or a path that already contains a filename (absolute or relative) to use it verbatim.
 
-The command stores the participant details in `registry.json` within the current working directory, creating the file if it does not exist. Re-running the same command with identical arguments is idempotent.
+By default the command stores participant details in `registry.json` within the current working directory, creating the file if it does not exist. Re-running the same command with identical arguments is idempotent.
 
 ## License
 
