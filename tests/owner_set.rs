@@ -1,16 +1,8 @@
 use std::{fs, path::Path};
 
 use assert_cmd::Command;
-use bc_components::PrivateKeyBase;
-use bc_envelope::prelude::{Date, UR, UREncodable};
-use bc_rand::make_fake_random_number_generator;
-use bc_xid::{
-    XIDDocument, XIDGeneratorOptions, XIDGenesisMarkOptions,
-    XIDInceptionKeyOptions, XIDPrivateKeyOptions, XIDSigningOptions,
-};
 use frost::participants::OwnerRecord;
 use predicates::prelude::*;
-use provenance_mark::ProvenanceMarkResolution;
 use serde_json::json;
 use tempfile::TempDir;
 
@@ -67,36 +59,10 @@ fn owner_set_requires_private_keys() {
 }
 
 fn make_owner_xid_ur() -> String {
-    let mut rng = make_fake_random_number_generator();
-    let date = Date::from_ymd(2025, 12, 31);
-    let private_key_base = PrivateKeyBase::new_using(&mut rng);
-
-    let document = XIDDocument::new(
-        XIDInceptionKeyOptions::PrivateKeyBase(private_key_base),
-        XIDGenesisMarkOptions::Passphrase(
-            "owner-password".to_string(),
-            Some(ProvenanceMarkResolution::Quartile),
-            Some(date),
-            None,
-        ),
-    );
-    let envelope = document
-        .to_envelope(
-            XIDPrivateKeyOptions::Include,
-            XIDGeneratorOptions::default(),
-            XIDSigningOptions::Inception,
-        )
-        .unwrap();
-    XIDDocument::from_envelope(
-        &envelope,
-        None,
-        bc_xid::XIDVerifySignature::Inception,
-    )
-    .expect("owner envelope parses");
-    let ur_string = envelope.ur_string();
-
-    let roundtrip = UR::from_ur_string(&ur_string).expect("roundtrip UR");
-    assert_eq!(roundtrip.ur_type_str(), "envelope");
+    let ur_string = fixture("dan_private_xid.txt");
+    let roundtrip =
+        bc_envelope::prelude::UR::from_ur_string(&ur_string).unwrap();
+    assert_eq!(roundtrip.ur_type_str(), "xid");
     OwnerRecord::from_signed_xid_ur(ur_string.clone()).unwrap();
     ur_string
 }

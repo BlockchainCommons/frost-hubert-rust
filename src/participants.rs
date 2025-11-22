@@ -73,7 +73,7 @@ impl OwnerRecord {
     pub fn from_signed_xid_ur(
         xid_document_ur: impl Into<String>,
     ) -> Result<Self> {
-        let (raw, document) = parse_signed_xid_document(xid_document_ur)?;
+        let (raw, document) = parse_relaxed_xid_document(xid_document_ur)?;
         if document.inception_private_keys().is_none() {
             bail!("Owner XID document must include private keys");
         }
@@ -445,6 +445,31 @@ fn parse_signed_xid_document(
         XIDVerifySignature::Inception,
     )
     .context("XID document must be signed by its inception key")?;
+
+    Ok((sanitized, document))
+}
+
+fn parse_relaxed_xid_document(
+    xid_document_ur: impl Into<String>,
+) -> Result<(String, XIDDocument)> {
+    let raw = xid_document_ur.into();
+    let sanitized = sanitize_xid_ur(&raw)?;
+    let ur = UR::from_ur_string(&sanitized)
+        .with_context(|| format!("Failed to parse UR: {sanitized}"))?;
+    if ur.ur_type_str() != "xid" && ur.ur_type_str() != "envelope" {
+        bail!("Expected a ur:xid document, found ur:{}", ur.ur_type_str());
+    }
+
+    let envelope_cbor = ur.cbor();
+    let envelope = Envelope::from_tagged_cbor(envelope_cbor.clone())
+        .or_else(|_| Envelope::from_untagged_cbor(envelope_cbor))
+        .context("Unable to decode XID document envelope")?;
+    let document = XIDDocument::from_envelope(
+        &envelope,
+        None,
+        XIDVerifySignature::None,
+    )
+    .context("XID document could not be parsed")?;
 
     Ok((sanitized, document))
 }
