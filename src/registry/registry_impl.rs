@@ -3,8 +3,9 @@ use std::{collections::BTreeMap, fs, path::Path};
 use anyhow::{Context, Result, bail};
 use bc_components::XID;
 use bc_envelope::prelude::{URDecodable, UREncodable};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde::ser::SerializeMap;
+use serde::{
+    Deserialize, Deserializer, Serialize, Serializer, ser::SerializeMap,
+};
 
 use super::{OwnerRecord, ParticipantRecord};
 
@@ -63,7 +64,7 @@ impl Registry {
         }
     }
 
-    pub fn add(
+    pub fn add_participant(
         &mut self,
         xid: XID,
         record: ParticipantRecord,

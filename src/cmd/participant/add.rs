@@ -27,7 +27,7 @@ impl CommandArgs {
         let path = participants_file_path(self.registry)?;
         let mut registry = Registry::load(&path)?;
 
-        match registry.add(xid, participant)? {
+        match registry.add_participant(xid, participant)? {
             AddOutcome::AlreadyPresent => {
                 println!("Participant already recorded");
             }
