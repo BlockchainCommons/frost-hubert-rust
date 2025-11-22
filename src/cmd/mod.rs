@@ -3,6 +3,8 @@ use clap::{Parser, Subcommand};
 
 #[doc(hidden)]
 pub mod participant;
+#[doc(hidden)]
+pub mod dkg;
 
 /// FROST command-line interface definition.
 #[derive(Debug, Parser)]
