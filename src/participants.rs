@@ -311,14 +311,14 @@ impl<'de> Deserialize<'de> for OwnerRecord {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-pub struct ParticipantsFile {
+pub struct Registry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     owner: Option<OwnerRecord>,
     #[serde(default, with = "serde_participants_map")]
     participants: BTreeMap<XID, ParticipantRecord>,
 }
 
-impl ParticipantsFile {
+impl Registry {
     pub fn load(path: &Path) -> Result<Self> {
         if !path.exists() {
             return Ok(Self::default());
@@ -345,10 +345,7 @@ impl ParticipantsFile {
             .with_context(|| format!("Failed to write {}", path.display()))
     }
 
-    pub fn set_owner(
-        &mut self,
-        owner: OwnerRecord,
-    ) -> Result<OwnerOutcome> {
+    pub fn set_owner(&mut self, owner: OwnerRecord) -> Result<OwnerOutcome> {
         match &self.owner {
             None => {
                 self.owner = Some(owner);
@@ -464,12 +461,9 @@ fn parse_relaxed_xid_document(
     let envelope = Envelope::from_tagged_cbor(envelope_cbor.clone())
         .or_else(|_| Envelope::from_untagged_cbor(envelope_cbor))
         .context("Unable to decode XID document envelope")?;
-    let document = XIDDocument::from_envelope(
-        &envelope,
-        None,
-        XIDVerifySignature::None,
-    )
-    .context("XID document could not be parsed")?;
+    let document =
+        XIDDocument::from_envelope(&envelope, None, XIDVerifySignature::None)
+            .context("XID document could not be parsed")?;
 
     Ok((sanitized, document))
 }

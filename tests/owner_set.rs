@@ -1,6 +1,8 @@
-use std::{fs, path::Path};
+mod common;
 
-use assert_cmd::Command;
+use std::fs;
+
+use common::{fixture, registry_file, run_frost};
 use frost::participants::OwnerRecord;
 use predicates::prelude::*;
 use serde_json::json;
@@ -26,7 +28,7 @@ fn owner_set_with_participant_add_persists_both() {
     .assert()
     .success();
 
-    let path = participants_file(temp.path());
+    let path = registry_file(temp.path());
     let content = fs::read_to_string(path).unwrap();
     let expected = json!({
         "owner": {
@@ -55,7 +57,7 @@ fn owner_set_requires_private_keys() {
         .failure()
         .stderr(predicate::str::contains("must include private keys"));
 
-    assert!(!participants_file(temp.path()).exists());
+    assert!(!registry_file(temp.path()).exists());
 }
 
 fn make_owner_xid_ur() -> String {
@@ -65,25 +67,6 @@ fn make_owner_xid_ur() -> String {
     assert_eq!(roundtrip.ur_type_str(), "xid");
     OwnerRecord::from_signed_xid_ur(ur_string.clone()).unwrap();
     ur_string
-}
-
-fn run_frost(cwd: &Path, args: &[&str]) -> Command {
-    let mut cmd = Command::cargo_bin("frost").unwrap();
-    cmd.current_dir(cwd);
-    cmd.args(args);
-    cmd
-}
-
-fn fixture(name: &str) -> String {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("tests")
-        .join("fixtures")
-        .join(name);
-    fs::read_to_string(path).unwrap().trim().to_owned()
-}
-
-fn participants_file(dir: &Path) -> std::path::PathBuf {
-    dir.join("registry.json")
 }
 
 fn assert_registry_matches(actual: &str, expected: serde_json::Value) {

@@ -3,7 +3,7 @@ use clap::Parser;
 
 use crate::{
     cmd::registry::participants_file_path,
-    participants::{AddOutcome, ParticipantRecord, ParticipantsFile},
+    participants::{AddOutcome, ParticipantRecord, Registry},
 };
 
 #[derive(Debug, Parser)]
@@ -25,7 +25,7 @@ impl CommandArgs {
             ParticipantRecord::from_signed_xid_ur(self.xid_document, pet_name)?;
         let xid = participant.xid();
         let path = participants_file_path(self.registry)?;
-        let mut registry = ParticipantsFile::load(&path)?;
+        let mut registry = Registry::load(&path)?;
 
         match registry.add(xid, participant)? {
             AddOutcome::AlreadyPresent => {
