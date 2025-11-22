@@ -182,6 +182,12 @@ impl DkgGroupInvite {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum DkgInvitationResult {
+    Accepted,
+    Declined(String), // Reason for declining
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct DkgInvitation {
     xid: XID,               // XID of the participant
     response_arid: ARID,    // Hubert ARID at which to post the response
