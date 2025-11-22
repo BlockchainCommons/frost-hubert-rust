@@ -486,6 +486,7 @@ echo "${{ALICE_INVITE}}" | envelope format
             f"""
 ALICE_INVITE_SEALED=$(frost dkg invite show --registry {qp(REGISTRIES["alice"])} --sealed --min-signers 2 --charter "This group will authorize new club editions." Bob Carol Dan)
 echo "${{ALICE_INVITE_SEALED}}" | envelope format
+echo "${{ALICE_INVITE_SEALED}}" | envelope info
 """,
             commentary=(
                 "Seal the 2-of-3 invite for Bob, Carol, and Dan and format the sealed envelope "
