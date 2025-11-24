@@ -192,7 +192,6 @@ impl InviteViewArgs {
         let owner = registry
             .owner()
             .context("Registry owner with private keys is required")?
-            .xid_document()
             .clone();
         let expected_sender =
             resolve_sender(&registry, self.sender.as_str())?;
@@ -212,7 +211,7 @@ impl InviteViewArgs {
                 envelope,
                 now,
                 expected_sender,
-                &owner,
+                owner.xid_document(),
             )?;
 
             let participant_names =
@@ -220,6 +219,7 @@ impl InviteViewArgs {
                     &registry,
                     &details.participants,
                     &owner.xid(),
+                    owner.pet_name(),
                 )?;
 
             println!("Charter: {}", details.invitation.charter());
@@ -431,12 +431,16 @@ fn participant_names_from_registry(
     registry: &Registry,
     participants: &[XIDDocument],
     owner_xid: &XID,
+    owner_pet_name: Option<&str>,
 ) -> Result<Vec<String>> {
     let mut names = Vec::new();
     for document in participants {
         let xid = document.xid();
         if xid == *owner_xid {
-            names.push(xid.ur_string());
+            let name = owner_pet_name
+                .map(|n| n.to_owned())
+                .unwrap_or_else(|| xid.ur_string());
+            names.push(name);
         } else {
             let record = registry.participant(&xid).ok_or_else(|| {
                 anyhow::anyhow!(

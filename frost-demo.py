@@ -453,7 +453,7 @@ echo "{upper}_SIGNED_DOC=${upper}_SIGNED_DOC"
             participant_block = "\n".join(participant_lines)
             script = f"""
 {registry_var}={qp(registry_path)}
-frost registry owner set --registry "${registry_var}" "${owner_upper}_OWNER_DOC"
+frost registry owner set --registry "${registry_var}" "${owner_upper}_OWNER_DOC" {owner_title}
 {participant_block}
 cat "${registry_var}"
 """

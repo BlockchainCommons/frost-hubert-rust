@@ -45,6 +45,13 @@ impl Registry {
     }
 
     pub fn set_owner(&mut self, owner: OwnerRecord) -> Result<OwnerOutcome> {
+        if let Some(name) = owner.pet_name()
+            && let Some((_, existing)) = self.participant_by_pet_name(name)
+            && existing.pet_name() == Some(name)
+        {
+            bail!("Pet name '{name}' already used by a participant");
+        }
+
         match &self.owner {
             None => {
                 self.owner = Some(owner);
@@ -53,10 +60,15 @@ impl Registry {
             Some(existing) => {
                 if existing.xid() == owner.xid()
                     && existing.xid_document_ur() == owner.xid_document_ur()
+                    && existing.pet_name() == owner.pet_name()
                 {
                     Ok(OwnerOutcome::AlreadyPresent)
                 } else if existing.xid() == owner.xid() {
-                    bail!("Owner already exists with different keys");
+                    if existing.xid_document_ur() != owner.xid_document_ur() {
+                        bail!("Owner already exists with different keys");
+                    }
+                    self.owner = Some(owner);
+                    Ok(OwnerOutcome::Inserted)
                 } else {
                     bail!("Owner already recorded for {}", existing.xid());
                 }

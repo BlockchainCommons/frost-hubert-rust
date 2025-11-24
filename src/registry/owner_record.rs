@@ -12,17 +12,24 @@ use serde::{
 pub struct OwnerRecord {
     xid_document_ur: String,
     xid_document: XIDDocument,
+    pet_name: Option<String>,
 }
 
 impl OwnerRecord {
     pub fn from_signed_xid_ur(
         xid_document_ur: impl Into<String>,
+        pet_name: Option<String>,
     ) -> Result<Self> {
-        let (raw, document) = parse_relaxed_xid_document(xid_document_ur)?;
+        let (raw, document) =
+            parse_relaxed_xid_document(xid_document_ur)?;
         if document.inception_private_keys().is_none() {
             bail!("Owner XID document must include private keys");
         }
-        Ok(Self { xid_document_ur: raw, xid_document: document })
+        Ok(Self {
+            xid_document_ur: raw,
+            xid_document: document,
+            pet_name,
+        })
     }
 
     pub fn xid(&self) -> XID { self.xid_document.xid() }
@@ -30,6 +37,8 @@ impl OwnerRecord {
     pub fn xid_document(&self) -> &XIDDocument { &self.xid_document }
 
     pub fn xid_document_ur(&self) -> &str { &self.xid_document_ur }
+
+    pub fn pet_name(&self) -> Option<&str> { self.pet_name.as_deref() }
 }
 
 impl Serialize for OwnerRecord {
@@ -37,8 +46,12 @@ impl Serialize for OwnerRecord {
     where
         S: Serializer,
     {
-        let mut state = serializer.serialize_struct("OwnerRecord", 1)?;
+        let field_count = if self.pet_name.is_some() { 2 } else { 1 };
+        let mut state = serializer.serialize_struct("OwnerRecord", field_count)?;
         state.serialize_field("xid_document", &self.xid_document_ur)?;
+        if let Some(name) = &self.pet_name {
+            state.serialize_field("pet_name", name)?;
+        }
         state.end()
     }
 }
@@ -50,6 +63,7 @@ impl<'de> Deserialize<'de> for OwnerRecord {
     {
         enum Field {
             XidDocument,
+            PetName,
         }
 
         impl<'de> Deserialize<'de> for Field {
@@ -75,9 +89,10 @@ impl<'de> Deserialize<'de> for OwnerRecord {
                     {
                         match value {
                             "xid_document" => Ok(Field::XidDocument),
+                            "pet_name" => Ok(Field::PetName),
                             _ => Err(de::Error::unknown_field(
                                 value,
-                                &["xid_document"],
+                                &["xid_document", "pet_name"],
                             )),
                         }
                     }
@@ -104,6 +119,7 @@ impl<'de> Deserialize<'de> for OwnerRecord {
                 M: MapAccess<'de>,
             {
                 let mut xid_document_ur: Option<String> = None;
+                let mut pet_name: Option<Option<String>> = None;
 
                 while let Some(field) = map.next_key()? {
                     match field {
@@ -115,20 +131,31 @@ impl<'de> Deserialize<'de> for OwnerRecord {
                             }
                             xid_document_ur = Some(map.next_value()?);
                         }
+                        Field::PetName => {
+                            if pet_name.is_some() {
+                                return Err(de::Error::duplicate_field(
+                                    "pet_name",
+                                ));
+                            }
+                            pet_name = Some(map.next_value()?);
+                        }
                     }
                 }
 
                 let xid_document_ur = xid_document_ur
                     .ok_or_else(|| de::Error::missing_field("xid_document"))?;
 
-                OwnerRecord::from_signed_xid_ur(xid_document_ur)
+                OwnerRecord::from_signed_xid_ur(
+                    xid_document_ur,
+                    pet_name.flatten(),
+                )
                     .map_err(de::Error::custom)
             }
         }
 
         deserializer.deserialize_struct(
             "OwnerRecord",
-            &["xid_document"],
+            &["xid_document", "pet_name"],
             OwnerRecordVisitor,
         )
     }
