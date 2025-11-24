@@ -179,6 +179,10 @@ pub struct InviteViewArgs {
     /// Expected sender of the invite (ur:xid or pet name in registry)
     #[arg(value_name = "SENDER")]
     sender: String,
+
+    /// Optional pre-fetched invite envelope (ur:envelope); skips Hubert retrieval when present
+    #[arg(value_name = "UR:ENVELOPE")]
+    envelope: Option<String>,
 }
 
 impl InviteViewArgs {
@@ -218,14 +222,25 @@ impl InviteViewArgs {
                 &owner.xid(),
                 owner.pet_name(),
             )?;
+            let coordinator_name =
+                resolve_sender_name(&registry, &details.invitation.sender());
 
             println!("Charter: {}", details.invitation.charter());
             println!("Min signers: {}", details.invitation.min_signers());
+            if let Some(name) = coordinator_name {
+                println!("Coordinator: {}", name);
+            }
             println!("Participants: {}", participant_names.join(", "));
             println!(
                 "Reply ARID: {}",
                 details.invitation.response_arid().ur_string()
             );
+            if self.envelope.is_none() {
+                println!(
+                    "Invite Envelope: {}",
+                    details.invitation_envelope.ur_string()
+                );
+            }
 
             Ok(())
         })
@@ -329,6 +344,7 @@ fn build_invite(
 
 struct InviteDetails {
     invitation: DkgInvitation,
+    invitation_envelope: Envelope,
     participants: Vec<XIDDocument>,
 }
 
@@ -406,14 +422,22 @@ fn decode_invite_details(
         participant_docs.push(xid_document);
     }
 
-    let invitation =
-        DkgInvitation::from_invite(invite, now, &expected_sender, recipient)?;
+    let invitation = DkgInvitation::from_invite(
+        invite.clone(),
+        now,
+        &expected_sender,
+        recipient,
+    )?;
 
     if response_arid.is_none() {
         bail!("Invite does not include a response ARID for this recipient");
     }
 
-    Ok(InviteDetails { invitation, participants: participant_docs })
+    Ok(InviteDetails {
+        invitation,
+        invitation_envelope: invite,
+        participants: participant_docs,
+    })
 }
 
 fn participant_names_from_registry(
@@ -465,6 +489,40 @@ fn resolve_sender(registry: &Registry, input: &str) -> Result<XIDDocument> {
             })?;
         Ok(record.xid_document().clone())
     }
+}
+
+fn resolve_sender_name(
+    registry: &Registry,
+    sender: &XIDDocument,
+) -> Option<String> {
+    if let Some(owner) = registry.owner()
+        && owner.xid_document().xid() == sender.xid()
+    {
+        return owner.pet_name().map(|s| s.to_owned());
+    }
+    registry
+        .participant(&sender.xid())
+        .and_then(|record| {
+            record
+                .pet_name()
+                .map(|n| n.to_owned())
+                .or_else(|| Some(record.xid().ur_string()))
+        })
+}
+
+fn parse_envelope_ur(input: &str) -> Result<Envelope> {
+    let trimmed = input.trim();
+    if trimmed.is_empty() {
+        bail!("Invite envelope is required");
+    }
+    let ur = UR::from_ur_string(trimmed)
+        .with_context(|| format!("Failed to parse envelope UR: {trimmed}"))?;
+    if ur.ur_type_str() != "envelope" {
+        bail!("Expected a ur:envelope, found ur:{}", ur.ur_type_str());
+    }
+    Envelope::from_tagged_cbor(ur.cbor())
+        .or_else(|_| Envelope::from_untagged_cbor(ur.cbor()))
+        .context("Invalid envelope payload")
 }
 
 fn parse_arid_ur(input: &str) -> Result<ARID> {
