@@ -4,9 +4,9 @@ use anyhow::{Context, Result, bail};
 use bc_components::{ARID, XID, XIDProvider};
 use bc_envelope::prelude::*;
 use bc_ur::prelude::UR;
+use bc_xid::{XIDDocument, XIDVerifySignature};
 use clap::{Parser, Subcommand};
 use gstp::{SealedRequest, SealedRequestBehavior};
-use bc_xid::{XIDDocument, XIDVerifySignature};
 use tokio::runtime::Runtime;
 
 use crate::{
@@ -185,16 +185,14 @@ impl InviteViewArgs {
     pub fn exec(self) -> Result<()> {
         let selection = self.storage.resolve()?;
         let registry_path = participants_file_path(self.registry.clone())?;
-        let registry =
-            Registry::load(&registry_path).with_context(|| {
-                format!("Failed to load registry at {}", registry_path.display())
-            })?;
+        let registry = Registry::load(&registry_path).with_context(|| {
+            format!("Failed to load registry at {}", registry_path.display())
+        })?;
         let owner = registry
             .owner()
             .context("Registry owner with private keys is required")?
             .clone();
-        let expected_sender =
-            resolve_sender(&registry, self.sender.as_str())?;
+        let expected_sender = resolve_sender(&registry, self.sender.as_str())?;
         let arid = parse_arid_ur(&self.arid)?;
 
         let registry = registry;
@@ -214,13 +212,12 @@ impl InviteViewArgs {
                 owner.xid_document(),
             )?;
 
-            let participant_names =
-                participant_names_from_registry(
-                    &registry,
-                    &details.participants,
-                    &owner.xid(),
-                    owner.pet_name(),
-                )?;
+            let participant_names = participant_names_from_registry(
+                &registry,
+                &details.participants,
+                &owner.xid(),
+                owner.pet_name(),
+            )?;
 
             println!("Charter: {}", details.invitation.charter());
             println!("Min signers: {}", details.invitation.min_signers());
@@ -358,8 +355,7 @@ fn decode_invite_details(
     if sealed_request.sender().xid() != expected_sender.xid() {
         bail!("Invite sender does not match expected sender");
     }
-    if sealed_request.request().function()
-        != &Function::from("dkgGroupInvite")
+    if sealed_request.request().function() != &Function::from("dkgGroupInvite")
     {
         bail!("Unexpected invite function");
     }
@@ -380,8 +376,9 @@ fn decode_invite_details(
     sealed_request
         .request()
         .extract_object_for_parameter::<ARID>("session")?;
-    let participant_objects =
-        sealed_request.request().objects_for_parameter("participant");
+    let participant_objects = sealed_request
+        .request()
+        .objects_for_parameter("participant");
     if min_signers < 2 {
         bail!("min_signers must be at least 2");
     }
@@ -403,28 +400,20 @@ fn decode_invite_details(
                 participant.object_for_predicate("response_arid")?;
             let response_arid_envelope = encrypted_response_arid
                 .decrypt_to_recipient(recipient_private_keys)?;
-            response_arid = Some(
-                response_arid_envelope.extract_subject::<ARID>()?,
-            );
+            response_arid =
+                Some(response_arid_envelope.extract_subject::<ARID>()?);
         }
         participant_docs.push(xid_document);
     }
 
-    let invitation = DkgInvitation::from_invite(
-        invite,
-        now,
-        &expected_sender,
-        recipient,
-    )?;
+    let invitation =
+        DkgInvitation::from_invite(invite, now, &expected_sender, recipient)?;
 
     if response_arid.is_none() {
         bail!("Invite does not include a response ARID for this recipient");
     }
 
-    Ok(InviteDetails {
-        invitation,
-        participants: participant_docs,
-    })
+    Ok(InviteDetails { invitation, participants: participant_docs })
 }
 
 fn participant_names_from_registry(
@@ -465,14 +454,15 @@ fn resolve_sender(registry: &Registry, input: &str) -> Result<XIDDocument> {
     }
 
     if let Ok(xid) = XID::from_ur_string(trimmed) {
-        let record = registry
-            .participant(&xid)
-            .with_context(|| format!("Sender with XID {} not found", xid.ur_string()))?;
+        let record = registry.participant(&xid).with_context(|| {
+            format!("Sender with XID {} not found", xid.ur_string())
+        })?;
         Ok(record.xid_document().clone())
     } else {
-        let (_, record) = registry
-            .participant_by_pet_name(trimmed)
-            .with_context(|| format!("Sender with pet name '{trimmed}' not found"))?;
+        let (_, record) =
+            registry.participant_by_pet_name(trimmed).with_context(|| {
+                format!("Sender with pet name '{trimmed}' not found")
+            })?;
         Ok(record.xid_document().clone())
     }
 }
@@ -489,8 +479,8 @@ fn parse_arid_ur(input: &str) -> Result<ARID> {
     }
     let cbor = ur.cbor();
     ARID::try_from(cbor.clone()).or_else(|_| {
-        let bytes = CBOR::try_into_byte_string(cbor)
-            .context("Invalid ARID payload")?;
+        let bytes =
+            CBOR::try_into_byte_string(cbor).context("Invalid ARID payload")?;
         ARID::from_data_ref(bytes).context("Invalid ARID payload")
     })
 }

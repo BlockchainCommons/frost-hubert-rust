@@ -22,7 +22,8 @@ pub struct CommandArgs {
 impl CommandArgs {
     pub fn exec(self) -> Result<()> {
         let pet_name = normalize_pet_name(self.pet_name)?;
-        let owner = OwnerRecord::from_signed_xid_ur(self.xid_document, pet_name)?;
+        let owner =
+            OwnerRecord::from_signed_xid_ur(self.xid_document, pet_name)?;
         let path = participants_file_path(self.registry)?;
         let mut registry = Registry::load(&path)?;
 

@@ -20,8 +20,7 @@ impl OwnerRecord {
         xid_document_ur: impl Into<String>,
         pet_name: Option<String>,
     ) -> Result<Self> {
-        let (raw, document) =
-            parse_relaxed_xid_document(xid_document_ur)?;
+        let (raw, document) = parse_relaxed_xid_document(xid_document_ur)?;
         if document.inception_private_keys().is_none() {
             bail!("Owner XID document must include private keys");
         }
@@ -47,7 +46,8 @@ impl Serialize for OwnerRecord {
         S: Serializer,
     {
         let field_count = if self.pet_name.is_some() { 2 } else { 1 };
-        let mut state = serializer.serialize_struct("OwnerRecord", field_count)?;
+        let mut state =
+            serializer.serialize_struct("OwnerRecord", field_count)?;
         state.serialize_field("xid_document", &self.xid_document_ur)?;
         if let Some(name) = &self.pet_name {
             state.serialize_field("pet_name", name)?;
@@ -149,7 +149,7 @@ impl<'de> Deserialize<'de> for OwnerRecord {
                     xid_document_ur,
                     pet_name.flatten(),
                 )
-                    .map_err(de::Error::custom)
+                .map_err(de::Error::custom)
             }
         }
 

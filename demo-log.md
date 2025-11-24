@@ -41,10 +41,10 @@ echo "ALICE_OWNER_DOC=$ALICE_OWNER_DOC"
 ALICE_SIGNED_DOC=$(envelope xid new --nickname Alice --private omit --sign inception "$ALICE_PRVKEYS")
 echo "ALICE_SIGNED_DOC=$ALICE_SIGNED_DOC"
 
-│ ALICE_PRVKEYS=ur:crypto-prvkeys/lftansgohdcxssguisskttdneygutyzoimfpadynmyaojpwdvtoysgurdwlyvohdadvedtcpmtvltansgehdcxssynbzwerowkmshginfzvarykgfmahwyioinhfttlusorsspswndnsgaayluvywmpmidsnfn
-│ ALICE_PUBKEYS=ur:crypto-pubkeys/lftanshfhdcxbycsndmwahpedwrhkndpmyylaessdyguwemydlmtaajpmetkgrjlaximgtjzfywntansgrhdcxestkjkdisacnrhzoemeelsfloydyrfeocninhpotnbaacwylldsrcettehbtmubwvautenkp
-│ ALICE_OWNER_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxrlktoxmdfpktlfndssspveylesfnoxhftodpcygenlryyksrnywlsgwedmdlcfcpoyaylrtpsotansgylftanshfhdcxbycsndmwahpedwrhkndpmyylaessdyguwemydlmtaajpmetkgrjlaximgtjzfywntansgrhdcxestkjkdisacnrhzoemeelsfloydyrfeocninhpotnbaacwylldsrcettehbtmubwoycsfncsfglfoycsfptpsotansgtlftansgohdcxssguisskttdneygutyzoimfpadynmyaojpwdvtoysgurdwlyvohdadvedtcpmtvltansgehdcxssynbzwerowkmshginfzvarykgfmahwyioinhfttlusorsspswndnsgaayluvywmoybstpsotansgmhdcxzmtpwmgsvontspksntimjewnvyfdqdkehkwzeyfgseuthnfmtngdhfrlhgglvtjpoycscstpsoihfpjziniaihoyaxtpsotansghhdfzrdgdptdtmubtbgtsemsrnnlubgfwhlgezcdlwdqdpldeonzobzkpeeoeksfgaowyclotzmfytetebzhkstneaeoeskksectdeemtwmuotonyfxgagaoejlrntbesuelezmmegecn
-│ ALICE_SIGNED_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxrlktoxmdfpktlfndssspveylesfnoxhftodpcygenlryyksrnywlsgwedmdlcfcpoyaylstpsotansgylftanshfhdcxbycsndmwahpedwrhkndpmyylaessdyguwemydlmtaajpmetkgrjlaximgtjzfywntansgrhdcxestkjkdisacnrhzoemeelsfloydyrfeocninhpotnbaacwylldsrcettehbtmubwoycsfncsfgoycscstpsoihfpjziniaihoyaxtpsotansghhdfzjniydrksmeztatzmbzenprpyqdskotlepsaytndwrfdabademszofgdrpywfspehmtfhbgztkbinvlvogaltchgslstdwnzcckckdyhldimddecfwthpjnzeahktnldnspghosad
+│ ALICE_PRVKEYS=ur:crypto-prvkeys/lftansgohdcxbbdaktdriolagsztfxjpwztewsehtpuogydsdedpflclbgytbbjokoztdlmnlglstansgehdcxtpcxuomkieaofxswotnthfvalbrflgltdnbdhkrssakpcfgubngekeynjzjpdmmufmgscwae
+│ ALICE_PUBKEYS=ur:crypto-pubkeys/lftanshfhdcxynineogatlptsejsplclftwlbygeptzmgosbcfvopmdmrdrnoyaxpeykrdhtlpemtansgrhdcxuevwaxfzahaoveprlnwpluuroytsykvdkpctzsjtcejoossttscnselolbzstbaopeskjswm
+│ ALICE_OWNER_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxtlgswylucwjttyetlsdakphheywszcskcenylkpdkpwppfkoimonfhhyrhammuihoyaylrtpsotansgylftanshfhdcxynineogatlptsejsplclftwlbygeptzmgosbcfvopmdmrdrnoyaxpeykrdhtlpemtansgrhdcxuevwaxfzahaoveprlnwpluuroytsykvdkpctzsjtcejoossttscnselolbzstbaooycsfncsfglfoycsfptpsotansgtlftansgohdcxbbdaktdriolagsztfxjpwztewsehtpuogydsdedpflclbgytbbjokoztdlmnlglstansgehdcxtpcxuomkieaofxswotnthfvalbrflgltdnbdhkrssakpcfgubngekeynjzjpdmmuoybstpsotansgmhdcxfninchbeltsodnrtprldchdivdskveuyayoejtrefrwmcmnydijkamrlwzckdnnboycscstpsoihfpjziniaihoyaxtpsotansghhdfztnjetsaocndetdssspndfenyehbegtmwteknqzutzmkgceguqzdtfmrhztzmksaybtwyoslbqdcsaajevsfwflttwzrnwzgyjtreahmosamysktdwkpejymybezsspmhmontwkca
+│ ALICE_SIGNED_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxtlgswylucwjttyetlsdakphheywszcskcenylkpdkpwppfkoimonfhhyrhammuihoyaylstpsotansgylftanshfhdcxynineogatlptsejsplclftwlbygeptzmgosbcfvopmdmrdrnoyaxpeykrdhtlpemtansgrhdcxuevwaxfzahaoveprlnwpluuroytsykvdkpctzsjtcejoossttscnselolbzstbaooycsfncsfgoycscstpsoihfpjziniaihoyaxtpsotansghhdfzhfaectytcfhyehjkhedprszsgdmdmdjthpdahndknniosbsaswieehlbnbbgayvwtbrezckthdatnbdmcpgwtobelrksfgaymwmtwehsemvlprwlfretzcadeefytnmuwnmeolvo
 ```
 
 ## Provisioning XID for Bob
@@ -61,10 +61,10 @@ echo "BOB_OWNER_DOC=$BOB_OWNER_DOC"
 BOB_SIGNED_DOC=$(envelope xid new --nickname Bob --private omit --sign inception "$BOB_PRVKEYS")
 echo "BOB_SIGNED_DOC=$BOB_SIGNED_DOC"
 
-│ BOB_PRVKEYS=ur:crypto-prvkeys/lftansgohdcxkekszegtbatturyndyiomsgmjplazmttdrzthtgwwduedkswgaldhskkbelfvycwtansgehdcxhkhlromusfurtevysofdhgbtlywefzahchgtgedwgljkimgrtdgmwnassrcafpbtfptntohf
-│ BOB_PUBKEYS=ur:crypto-pubkeys/lftanshfhdcxgagunnolutjtvazorefzuovortltknbshdtthhtyclrhjebyhfzotnckveurromdtansgrhdcxsesfpflolppdrpimhsttcygszchnykahyniymukigwlrqdsorlrhfgmhlfrpzmhklbcydyoy
-│ BOB_OWNER_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxcndkssieplbefhmyrfcmlstachgyvtnlveehgrlesotsmyplgtrfptgyprinfxceoyaylrtpsotansgylftanshfhdcxgagunnolutjtvazorefzuovortltknbshdtthhtyclrhjebyhfzotnckveurromdtansgrhdcxsesfpflolppdrpimhsttcygszchnykahyniymukigwlrqdsorlrhfgmhlfrpzmhkoycsfncsfgoycscstpsoiafwjlidlfoycsfptpsotansgtlftansgohdcxkekszegtbatturyndyiomsgmjplazmttdrzthtgwwduedkswgaldhskkbelfvycwtansgehdcxhkhlromusfurtevysofdhgbtlywefzahchgtgedwgljkimgrtdgmwnassrcafpbtoybstpsotansgmhdcxfrkohgahdibdtkmohyrnfmtotttldlbwhebehdmdhklgmwwkvyinfzparfcwglmnoyaxtpsotansghhdfzmuesyntlzegooypysoswhnpldybsldcytacxahcktsktndztylfelakkftvtbstbidzsytrskpdnkofpmtostphnttlnwkyaskgmmstauoamwkvwhkcfpymwietdmsbtynrpwmba
-│ BOB_SIGNED_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxcndkssieplbefhmyrfcmlstachgyvtnlveehgrlesotsmyplgtrfptgyprinfxceoyaylstpsotansgylftanshfhdcxgagunnolutjtvazorefzuovortltknbshdtthhtyclrhjebyhfzotnckveurromdtansgrhdcxsesfpflolppdrpimhsttcygszchnykahyniymukigwlrqdsorlrhfgmhlfrpzmhkoycsfncsfgoycscstpsoiafwjlidoyaxtpsotansghhdfzseemisgowthdtsjppacfvyinlaeyaepeoylafrfesrcmwtfraaisckluvddwayuyhlzewtswaxaoiomuuoredkkeghtdsehlndmemkbzdsfsiyiaadrhdrbacwbktbsntewztlke
+│ BOB_PRVKEYS=ur:crypto-prvkeys/lftansgohdcxfegloezolftnndmdprhlhyhphfhdqdiowmpetpadgsdyzchfcymenlfyurjeaycwtansgehdcxiovdhewtdwlpssgugraoytcftbknonecencpkptscpzmdrswjtynpacnwnmhpdlnfpvobbur
+│ BOB_PUBKEYS=ur:crypto-pubkeys/lftanshfhdcxhhvyjkdtpedydrqzjpnnlobbhtvemsgrpasfwpmhadjlhfcpmwytlsnllebbprwptansgrhdcxfxfsdygrfldksesoghsfvsrhoydsmybynsdmesvyjorogsskskiylkctmtzossgdgmlttock
+│ BOB_OWNER_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxlsvspsmsbzimsbcwcxjyjzgyldihstossgbtcawmgurpbdcplfhyhgtdfhectnfzoyaylrtpsotansgylftanshfhdcxhhvyjkdtpedydrqzjpnnlobbhtvemsgrpasfwpmhadjlhfcpmwytlsnllebbprwptansgrhdcxfxfsdygrfldksesoghsfvsrhoydsmybynsdmesvyjorogsskskiylkctmtzossgdoycsfncsfglfoycsfptpsotansgtlftansgohdcxfegloezolftnndmdprhlhyhphfhdqdiowmpetpadgsdyzchfcymenlfyurjeaycwtansgehdcxiovdhewtdwlpssgugraoytcftbknonecencpkptscpzmdrswjtynpacnwnmhpdlnoybstpsotansgmhdcxpshlfwttgmhfotvaktghwkvdhgenleuowkuemnbbwsaslggdkswsdkwnrysbdtehoycscstpsoiafwjlidoyaxtpsotansghhdfzrfnyvtgsksdaaafrswkesnjlbkmepawsvdamahdaftcfaxmwdmghtlnddsbycwbtesrtnylsiykiptrnftvaflfpjkwmttdepafddtgykskpknfsdaeestbdsslthgltutpkoept
+│ BOB_SIGNED_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxlsvspsmsbzimsbcwcxjyjzgyldihstossgbtcawmgurpbdcplfhyhgtdfhectnfzoyaylstpsotansgylftanshfhdcxhhvyjkdtpedydrqzjpnnlobbhtvemsgrpasfwpmhadjlhfcpmwytlsnllebbprwptansgrhdcxfxfsdygrfldksesoghsfvsrhoydsmybynsdmesvyjorogsskskiylkctmtzossgdoycsfncsfgoycscstpsoiafwjlidoyaxtpsotansghhdfzvtmnfliotbjldiotjntposurykmdurfsrnnsfyiowtjlsffxcmfrfnyljlaytoaaahztgyfdroswmourpfkipkknzeotieamoywngybavwatutceayjkbgntbduepmzennktteid
 ```
 
 ## Provisioning XID for Carol
@@ -81,10 +81,10 @@ echo "CAROL_OWNER_DOC=$CAROL_OWNER_DOC"
 CAROL_SIGNED_DOC=$(envelope xid new --nickname Carol --private omit --sign inception "$CAROL_PRVKEYS")
 echo "CAROL_SIGNED_DOC=$CAROL_SIGNED_DOC"
 
-│ CAROL_PRVKEYS=ur:crypto-prvkeys/lftansgohdcxplostponfxaxrsiakohtjtbdvejsmelrvlmwptvdsnaomstyuogylshncmhkzouotansgehdcxchgafgatimchahtsytdyamksmssolpmoaajeftbacmzcnsesateyseentklggdpfjyhgvyft
-│ CAROL_PUBKEYS=ur:crypto-pubkeys/lftanshfhdcxgobncnleflfxpsbwkeaykbpfcfkilypldrvstypelybyloosfpfseyfgmnpawfhttansgrhdcxdwktgyinjtfhmntopssptattcanyjefghydtiawpskjkzttoiemsttmkjykptibdbntabsly
-│ CAROL_OWNER_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxgrswfhbswltpnysreczewzltsaidmnflfpjyzmcxnsbbdnfhlujezcdadtwfkklfoyaylrtpsotansgylftanshfhdcxgobncnleflfxpsbwkeaykbpfcfkilypldrvstypelybyloosfpfseyfgmnpawfhttansgrhdcxdwktgyinjtfhmntopssptattcanyjefghydtiawpskjkzttoiemsttmkjykptibdlfoycsfptpsotansgtlftansgohdcxplostponfxaxrsiakohtjtbdvejsmelrvlmwptvdsnaomstyuogylshncmhkzouotansgehdcxchgafgatimchahtsytdyamksmssolpmoaajeftbacmzcnsesateyseentklggdpfoybstpsotansgmhdcxqddmbkcxwzcnpdryzosaecehztcwuygswepeqdeyftemsndediwlbdmelgswcffzoycsfncsfgoycscstpsoihfxhsjpjljzoyaxtpsotansghhdfzuoesndztsnmyrdgrgtgmcywmwdfevlamrhnlpyeespvtwmfhpdlajelsckuyttsptinlpfnbtocmcyckfhaaroaedtcynylttkcsieoxbbbemkoytdfxbekinnzstsosiofdlrtd
-│ CAROL_SIGNED_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxgrswfhbswltpnysreczewzltsaidmnflfpjyzmcxnsbbdnfhlujezcdadtwfkklfoyaylstpsotansgylftanshfhdcxgobncnleflfxpsbwkeaykbpfcfkilypldrvstypelybyloosfpfseyfgmnpawfhttansgrhdcxdwktgyinjtfhmntopssptattcanyjefghydtiawpskjkzttoiemsttmkjykptibdoycsfncsfgoycscstpsoihfxhsjpjljzoyaxtpsotansghhdfzpkwdisjogmcfbweyotisgohsdawldtzobtideydaksayetynlrlrcxesetaytbgrnllkeymkgleosshkhggalfzebtbsnesoynlraygovejotpfpkbyllrdpwecaeoiebstteslb
+│ CAROL_PRVKEYS=ur:crypto-prvkeys/lftansgohdcxhgashkcwlguestwevsdlrpbdtoksghlrostiecgygmfdytchskstuypatnvlbzjltansgehdcxtlrykkiokkamasmudwolskdarkcwpetpftgabkcffxglclhdemgrcwhfpfbkehmuenlgvywn
+│ CAROL_PUBKEYS=ur:crypto-pubkeys/lftanshfhdcxeswmzmwmlnesytfywmsamkpydslfglotmnvobzbkfzfwotplnbtotkhpaeesdsjstansgrhdcxdetpbnkpfndmwnosgolatifgjteeuomhecbgecpllafdjztkgtlbfgpmvwbkbdahjzrdotrn
+│ CAROL_OWNER_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxhdeyfgjosnnyleckjybagyadvwcfestsytrniegmueuocmhskorhvehhrybekedloyaylrtpsotansgylftanshfhdcxeswmzmwmlnesytfywmsamkpydslfglotmnvobzbkfzfwotplnbtotkhpaeesdsjstansgrhdcxdetpbnkpfndmwnosgolatifgjteeuomhecbgecpllafdjztkgtlbfgpmvwbkbdahoycsfncsfglfoycsfptpsotansgtlftansgohdcxhgashkcwlguestwevsdlrpbdtoksghlrostiecgygmfdytchskstuypatnvlbzjltansgehdcxtlrykkiokkamasmudwolskdarkcwpetpftgabkcffxglclhdemgrcwhfpfbkehmuoybstpsotansgmhdcxoslumwrygyyacaensggalnwdtyyljkkpwsceutqzbbqzwtbafetdsoehtpeejedioycscstpsoihfxhsjpjljzoyaxtpsotansghhdfzgsetamfgvahnlrotsfzcghcpidcfgljystmdstgttegdmobgierhgyisgyfhfmglloehtagwpscmltgyrnclbzlbzmhgpkghpkgaiabnhlotjlbwfelofrvogtwpprkihhbtynlt
+│ CAROL_SIGNED_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxhdeyfgjosnnyleckjybagyadvwcfestsytrniegmueuocmhskorhvehhrybekedloyaylstpsotansgylftanshfhdcxeswmzmwmlnesytfywmsamkpydslfglotmnvobzbkfzfwotplnbtotkhpaeesdsjstansgrhdcxdetpbnkpfndmwnosgolatifgjteeuomhecbgecpllafdjztkgtlbfgpmvwbkbdahoycsfncsfgoycscstpsoihfxhsjpjljzoyaxtpsotansghhdfzskotvtwnferecahnprdisnrsdefnnlrphpjpfyvolpfrfgehuesebeecfmcaclmerhlawpfxsotlfsbnmkmsftpsbtkilkpdrydsmdlfchendwgdlnbgzelfprcpadbahymwktqd
 ```
 
 ## Provisioning XID for Dan
@@ -101,10 +101,10 @@ echo "DAN_OWNER_DOC=$DAN_OWNER_DOC"
 DAN_SIGNED_DOC=$(envelope xid new --nickname Dan --private omit --sign inception "$DAN_PRVKEYS")
 echo "DAN_SIGNED_DOC=$DAN_SIGNED_DOC"
 
-│ DAN_PRVKEYS=ur:crypto-prvkeys/lftansgohdcxgubdbgtbyafdhnrfiyfyrnswvwoxwdttftgwsrfgnsytaooycsutkbsruyrkiyrltansgehdcxgmsppmpfyasrfejlgahgrohfvaronydmftenfwidaetigoceynfgsaimplhfsgchsnmketlo
-│ DAN_PUBKEYS=ur:crypto-pubkeys/lftanshfhdcxftutbttozsrfyacnhnfeehlkgycsjeknoeroesssjleerdhnnlmkmokpaomycxpftansgrhdcxuegscenbayltfyonhlhplgmtvagliapdhlwewkknatskgrqdsrvoqzlyievsdiceaadkgedm
-│ DAN_OWNER_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxqzmdsrnyfncmgmprgofhdrbtctvahkcmloyaynksehbsvliafnfyjtlfgouyuopdoyaylrtpsotansgylftanshfhdcxftutbttozsrfyacnhnfeehlkgycsjeknoeroesssjleerdhnnlmkmokpaomycxpftansgrhdcxuegscenbayltfyonhlhplgmtvagliapdhlwewkknatskgrqdsrvoqzlyievsdiceoycsfncsfgoycscstpsoiafyhsjtlfoycsfptpsotansgtlftansgohdcxgubdbgtbyafdhnrfiyfyrnswvwoxwdttftgwsrfgnsytaooycsutkbsruyrkiyrltansgehdcxgmsppmpfyasrfejlgahgrohfvaronydmftenfwidaetigoceynfgsaimplhfsgchoybstpsotansgmhdcxwkbddpfmskwkwdkkmdleotfwhsdmpdtohtiadmeeghfgbnsadrytdtdknehgjpuyoyaxtpsotansghhdfzjnzmzmksbejshsplaytltpfxbzspmeolrsaxjlhsltfzrpwzfrinjozmftcedlwketwfleeylurnurdsnesngwwsbafhuyqzbycpzsueqzmwpmghylhelsidkojykofpchlowygd
-│ DAN_SIGNED_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxqzmdsrnyfncmgmprgofhdrbtctvahkcmloyaynksehbsvliafnfyjtlfgouyuopdoyaylstpsotansgylftanshfhdcxftutbttozsrfyacnhnfeehlkgycsjeknoeroesssjleerdhnnlmkmokpaomycxpftansgrhdcxuegscenbayltfyonhlhplgmtvagliapdhlwewkknatskgrqdsrvoqzlyievsdiceoycsfncsfgoycscstpsoiafyhsjtoyaxtpsotansghhdfzechpincsyaetsrflzskojkplpdfztpjsswettphtosdnaatavwjocsdkpagwvytknyztdkjyadgeplfzhdonsfbgtniypdimjkehfdhgnnresphhcejevltkehtnbsinehamrkkt
+│ DAN_PRVKEYS=ur:crypto-prvkeys/lftansgohdcxbdstkefwwsjswteczmgyktfsecgmoseskedwfzdezsmsdicxbdhgfdlagorpcpeetansgehdcxbwbayaksvarnetswtpswcyjzfsotahspjyvtkeeolkdstymyhsoygspesssprtcadmqdaark
+│ DAN_PUBKEYS=ur:crypto-pubkeys/lftanshfhdcxfeylvytygyvsftdsvtbdcklgoevtgyrhwsknfplaolwzdyjsksktasdymssrchvstansgrhdcxuotyhgntcwgaosasreldmtwdpegdnldymnbbaeaalbhhynpygmdmdlhsmhjplacfdwfmmsid
+│ DAN_OWNER_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxnyeokgiyjkeycstlfwclskgtgtprvljtbdkplujygswkosbkgrwzldpljyioguhpoyaylrtpsotansgylftanshfhdcxfeylvytygyvsftdsvtbdcklgoevtgyrhwsknfplaolwzdyjsksktasdymssrchvstansgrhdcxuotyhgntcwgaosasreldmtwdpegdnldymnbbaeaalbhhynpygmdmdlhsmhjplacfoycsfncsfglfoycsfptpsotansgtlftansgohdcxbdstkefwwsjswteczmgyktfsecgmoseskedwfzdezsmsdicxbdhgfdlagorpcpeetansgehdcxbwbayaksvarnetswtpswcyjzfsotahspjyvtkeeolkdstymyhsoygspesssprtcaoybstpsotansgmhdcxjkmtenvlckcfeowyloghryoyckkkwelytdhycwflonpktsvsiooxmshdghglwlzmoycscstpsoiafyhsjtoyaxtpsotansghhdfzkgbylrteotdklgsbykdapdecfwkkvwwslgwkteembbcptkbbhturfzckhepkotwspdlsndltseeoknjodmettbihrsjkskrfaxdtckwponlbnthgykkiensgbzploncwcazolgot
+│ DAN_SIGNED_DOC=ur:xid/tpsplftpsplftpsotanshdhdcxnyeokgiyjkeycstlfwclskgtgtprvljtbdkplujygswkosbkgrwzldpljyioguhpoyaylstpsotansgylftanshfhdcxfeylvytygyvsftdsvtbdcklgoevtgyrhwsknfplaolwzdyjsksktasdymssrchvstansgrhdcxuotyhgntcwgaosasreldmtwdpegdnldymnbbaeaalbhhynpygmdmdlhsmhjplacfoycsfncsfgoycscstpsoiafyhsjtoyaxtpsotansghhdfzzowzndswprdezcnsvdchhnbgmtateoplykehlgtektctkstamwlrjtuofspttapffpindagyfnmogusbmwfnmydapyjnvyjzchbyingtlfkttlrekbdponlfwdpkotlsfsqzaemh
 ```
 
 ## Building Alice's registry
@@ -121,20 +121,20 @@ cat "$ALICE_REGISTRY"
 
 │ {
 │   "owner": {
-│     "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxrlktoxmdfpktlfndssspveylesfnoxhftodpcygenlryyksrnywlsgwedmdlcfcpoyaylrtpsotansgylftanshfhdcxbycsndmwahpedwrhkndpmyylaessdyguwemydlmtaajpmetkgrjlaximgtjzfywntansgrhdcxestkjkdisacnrhzoemeelsfloydyrfeocninhpotnbaacwylldsrcettehbtmubwoycsfncsfglfoycsfptpsotansgtlftansgohdcxssguisskttdneygutyzoimfpadynmyaojpwdvtoysgurdwlyvohdadvedtcpmtvltansgehdcxssynbzwerowkmshginfzvarykgfmahwyioinhfttlusorsspswndnsgaayluvywmoybstpsotansgmhdcxzmtpwmgsvontspksntimjewnvyfdqdkehkwzeyfgseuthnfmtngdhfrlhgglvtjpoycscstpsoihfpjziniaihoyaxtpsotansghhdfzrdgdptdtmubtbgtsemsrnnlubgfwhlgezcdlwdqdpldeonzobzkpeeoeksfgaowyclotzmfytetebzhkstneaeoeskksectdeemtwmuotonyfxgagaoejlrntbesuelezmmegecn",
+│     "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxtlgswylucwjttyetlsdakphheywszcskcenylkpdkpwppfkoimonfhhyrhammuihoyaylrtpsotansgylftanshfhdcxynineogatlptsejsplclftwlbygeptzmgosbcfvopmdmrdrnoyaxpeykrdhtlpemtansgrhdcxuevwaxfzahaoveprlnwpluuroytsykvdkpctzsjtcejoossttscnselolbzstbaooycsfncsfglfoycsfptpsotansgtlftansgohdcxbbdaktdriolagsztfxjpwztewsehtpuogydsdedpflclbgytbbjokoztdlmnlglstansgehdcxtpcxuomkieaofxswotnthfvalbrflgltdnbdhkrssakpcfgubngekeynjzjpdmmuoybstpsotansgmhdcxfninchbeltsodnrtprldchdivdskveuyayoejtrefrwmcmnydijkamrlwzckdnnboycscstpsoihfpjziniaihoyaxtpsotansghhdfztnjetsaocndetdssspndfenyehbegtmwteknqzutzmkgceguqzdtfmrhztzmksaybtwyoslbqdcsaajevsfwflttwzrnwzgyjtreahmosamysktdwkpejymybezsspmhmontwkca",
 │     "pet_name": "Alice"
 │   },
 │   "participants": {
-│     "ur:xid/hdcxcndkssieplbefhmyrfcmlstachgyvtnlveehgrlesotsmyplgtrfptgyprinfxceueutdthh": {
-│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxcndkssieplbefhmyrfcmlstachgyvtnlveehgrlesotsmyplgtrfptgyprinfxceoyaylstpsotansgylftanshfhdcxgagunnolutjtvazorefzuovortltknbshdtthhtyclrhjebyhfzotnckveurromdtansgrhdcxsesfpflolppdrpimhsttcygszchnykahyniymukigwlrqdsorlrhfgmhlfrpzmhkoycsfncsfgoycscstpsoiafwjlidoyaxtpsotansghhdfzseemisgowthdtsjppacfvyinlaeyaepeoylafrfesrcmwtfraaisckluvddwayuyhlzewtswaxaoiomuuoredkkeghtdsehlndmemkbzdsfsiyiaadrhdrbacwbktbsntewztlke",
-│       "pet_name": "Bob"
-│     },
-│     "ur:xid/hdcxgrswfhbswltpnysreczewzltsaidmnflfpjyzmcxnsbbdnfhlujezcdadtwfkklfvlrhrhcw": {
-│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxgrswfhbswltpnysreczewzltsaidmnflfpjyzmcxnsbbdnfhlujezcdadtwfkklfoyaylstpsotansgylftanshfhdcxgobncnleflfxpsbwkeaykbpfcfkilypldrvstypelybyloosfpfseyfgmnpawfhttansgrhdcxdwktgyinjtfhmntopssptattcanyjefghydtiawpskjkzttoiemsttmkjykptibdoycsfncsfgoycscstpsoihfxhsjpjljzoyaxtpsotansghhdfzpkwdisjogmcfbweyotisgohsdawldtzobtideydaksayetynlrlrcxesetaytbgrnllkeymkgleosshkhggalfzebtbsnesoynlraygovejotpfpkbyllrdpwecaeoiebstteslb",
+│     "ur:xid/hdcxhdeyfgjosnnyleckjybagyadvwcfestsytrniegmueuocmhskorhvehhrybekedlndhtykgh": {
+│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxhdeyfgjosnnyleckjybagyadvwcfestsytrniegmueuocmhskorhvehhrybekedloyaylstpsotansgylftanshfhdcxeswmzmwmlnesytfywmsamkpydslfglotmnvobzbkfzfwotplnbtotkhpaeesdsjstansgrhdcxdetpbnkpfndmwnosgolatifgjteeuomhecbgecpllafdjztkgtlbfgpmvwbkbdahoycsfncsfgoycscstpsoihfxhsjpjljzoyaxtpsotansghhdfzskotvtwnferecahnprdisnrsdefnnlrphpjpfyvolpfrfgehuesebeecfmcaclmerhlawpfxsotlfsbnmkmsftpsbtkilkpdrydsmdlfchendwgdlnbgzelfprcpadbahymwktqd",
 │       "pet_name": "Carol"
 │     },
-│     "ur:xid/hdcxqzmdsrnyfncmgmprgofhdrbtctvahkcmloyaynksehbsvliafnfyjtlfgouyuopddeftfmhe": {
-│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxqzmdsrnyfncmgmprgofhdrbtctvahkcmloyaynksehbsvliafnfyjtlfgouyuopdoyaylstpsotansgylftanshfhdcxftutbttozsrfyacnhnfeehlkgycsjeknoeroesssjleerdhnnlmkmokpaomycxpftansgrhdcxuegscenbayltfyonhlhplgmtvagliapdhlwewkknatskgrqdsrvoqzlyievsdiceoycsfncsfgoycscstpsoiafyhsjtoyaxtpsotansghhdfzechpincsyaetsrflzskojkplpdfztpjsswettphtosdnaatavwjocsdkpagwvytknyztdkjyadgeplfzhdonsfbgtniypdimjkehfdhgnnresphhcejevltkehtnbsinehamrkkt",
+│     "ur:xid/hdcxlsvspsmsbzimsbcwcxjyjzgyldihstossgbtcawmgurpbdcplfhyhgtdfhectnfzlbkiaaje": {
+│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxlsvspsmsbzimsbcwcxjyjzgyldihstossgbtcawmgurpbdcplfhyhgtdfhectnfzoyaylstpsotansgylftanshfhdcxhhvyjkdtpedydrqzjpnnlobbhtvemsgrpasfwpmhadjlhfcpmwytlsnllebbprwptansgrhdcxfxfsdygrfldksesoghsfvsrhoydsmybynsdmesvyjorogsskskiylkctmtzossgdoycsfncsfgoycscstpsoiafwjlidoyaxtpsotansghhdfzvtmnfliotbjldiotjntposurykmdurfsrnnsfyiowtjlsffxcmfrfnyljlaytoaaahztgyfdroswmourpfkipkknzeotieamoywngybavwatutceayjkbgntbduepmzennktteid",
+│       "pet_name": "Bob"
+│     },
+│     "ur:xid/hdcxnyeokgiyjkeycstlfwclskgtgtprvljtbdkplujygswkosbkgrwzldpljyioguhpiyfyhhpy": {
+│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxnyeokgiyjkeycstlfwclskgtgtprvljtbdkplujygswkosbkgrwzldpljyioguhpoyaylstpsotansgylftanshfhdcxfeylvytygyvsftdsvtbdcklgoevtgyrhwsknfplaolwzdyjsksktasdymssrchvstansgrhdcxuotyhgntcwgaosasreldmtwdpegdnldymnbbaeaalbhhynpygmdmdlhsmhjplacfoycsfncsfgoycscstpsoiafyhsjtoyaxtpsotansghhdfzzowzndswprdezcnsvdchhnbgmtateoplykehlgtektctkstamwlrjtuofspttapffpindagyfnmogusbmwfnmydapyjnvyjzchbyingtlfkttlrekbdponlfwdpkotlsfsqzaemh",
 │       "pet_name": "Dan"
 │     }
 │   }
@@ -155,20 +155,20 @@ cat "$BOB_REGISTRY"
 
 │ {
 │   "owner": {
-│     "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxcndkssieplbefhmyrfcmlstachgyvtnlveehgrlesotsmyplgtrfptgyprinfxceoyaylrtpsotansgylftanshfhdcxgagunnolutjtvazorefzuovortltknbshdtthhtyclrhjebyhfzotnckveurromdtansgrhdcxsesfpflolppdrpimhsttcygszchnykahyniymukigwlrqdsorlrhfgmhlfrpzmhkoycsfncsfgoycscstpsoiafwjlidlfoycsfptpsotansgtlftansgohdcxkekszegtbatturyndyiomsgmjplazmttdrzthtgwwduedkswgaldhskkbelfvycwtansgehdcxhkhlromusfurtevysofdhgbtlywefzahchgtgedwgljkimgrtdgmwnassrcafpbtoybstpsotansgmhdcxfrkohgahdibdtkmohyrnfmtotttldlbwhebehdmdhklgmwwkvyinfzparfcwglmnoyaxtpsotansghhdfzmuesyntlzegooypysoswhnpldybsldcytacxahcktsktndztylfelakkftvtbstbidzsytrskpdnkofpmtostphnttlnwkyaskgmmstauoamwkvwhkcfpymwietdmsbtynrpwmba",
+│     "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxlsvspsmsbzimsbcwcxjyjzgyldihstossgbtcawmgurpbdcplfhyhgtdfhectnfzoyaylrtpsotansgylftanshfhdcxhhvyjkdtpedydrqzjpnnlobbhtvemsgrpasfwpmhadjlhfcpmwytlsnllebbprwptansgrhdcxfxfsdygrfldksesoghsfvsrhoydsmybynsdmesvyjorogsskskiylkctmtzossgdoycsfncsfglfoycsfptpsotansgtlftansgohdcxfegloezolftnndmdprhlhyhphfhdqdiowmpetpadgsdyzchfcymenlfyurjeaycwtansgehdcxiovdhewtdwlpssgugraoytcftbknonecencpkptscpzmdrswjtynpacnwnmhpdlnoybstpsotansgmhdcxpshlfwttgmhfotvaktghwkvdhgenleuowkuemnbbwsaslggdkswsdkwnrysbdtehoycscstpsoiafwjlidoyaxtpsotansghhdfzrfnyvtgsksdaaafrswkesnjlbkmepawsvdamahdaftcfaxmwdmghtlnddsbycwbtesrtnylsiykiptrnftvaflfpjkwmttdepafddtgykskpknfsdaeestbdsslthgltutpkoept",
 │     "pet_name": "Bob"
 │   },
 │   "participants": {
-│     "ur:xid/hdcxgrswfhbswltpnysreczewzltsaidmnflfpjyzmcxnsbbdnfhlujezcdadtwfkklfvlrhrhcw": {
-│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxgrswfhbswltpnysreczewzltsaidmnflfpjyzmcxnsbbdnfhlujezcdadtwfkklfoyaylstpsotansgylftanshfhdcxgobncnleflfxpsbwkeaykbpfcfkilypldrvstypelybyloosfpfseyfgmnpawfhttansgrhdcxdwktgyinjtfhmntopssptattcanyjefghydtiawpskjkzttoiemsttmkjykptibdoycsfncsfgoycscstpsoihfxhsjpjljzoyaxtpsotansghhdfzpkwdisjogmcfbweyotisgohsdawldtzobtideydaksayetynlrlrcxesetaytbgrnllkeymkgleosshkhggalfzebtbsnesoynlraygovejotpfpkbyllrdpwecaeoiebstteslb",
+│     "ur:xid/hdcxhdeyfgjosnnyleckjybagyadvwcfestsytrniegmueuocmhskorhvehhrybekedlndhtykgh": {
+│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxhdeyfgjosnnyleckjybagyadvwcfestsytrniegmueuocmhskorhvehhrybekedloyaylstpsotansgylftanshfhdcxeswmzmwmlnesytfywmsamkpydslfglotmnvobzbkfzfwotplnbtotkhpaeesdsjstansgrhdcxdetpbnkpfndmwnosgolatifgjteeuomhecbgecpllafdjztkgtlbfgpmvwbkbdahoycsfncsfgoycscstpsoihfxhsjpjljzoyaxtpsotansghhdfzskotvtwnferecahnprdisnrsdefnnlrphpjpfyvolpfrfgehuesebeecfmcaclmerhlawpfxsotlfsbnmkmsftpsbtkilkpdrydsmdlfchendwgdlnbgzelfprcpadbahymwktqd",
 │       "pet_name": "Carol"
 │     },
-│     "ur:xid/hdcxqzmdsrnyfncmgmprgofhdrbtctvahkcmloyaynksehbsvliafnfyjtlfgouyuopddeftfmhe": {
-│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxqzmdsrnyfncmgmprgofhdrbtctvahkcmloyaynksehbsvliafnfyjtlfgouyuopdoyaylstpsotansgylftanshfhdcxftutbttozsrfyacnhnfeehlkgycsjeknoeroesssjleerdhnnlmkmokpaomycxpftansgrhdcxuegscenbayltfyonhlhplgmtvagliapdhlwewkknatskgrqdsrvoqzlyievsdiceoycsfncsfgoycscstpsoiafyhsjtoyaxtpsotansghhdfzechpincsyaetsrflzskojkplpdfztpjsswettphtosdnaatavwjocsdkpagwvytknyztdkjyadgeplfzhdonsfbgtniypdimjkehfdhgnnresphhcejevltkehtnbsinehamrkkt",
+│     "ur:xid/hdcxnyeokgiyjkeycstlfwclskgtgtprvljtbdkplujygswkosbkgrwzldpljyioguhpiyfyhhpy": {
+│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxnyeokgiyjkeycstlfwclskgtgtprvljtbdkplujygswkosbkgrwzldpljyioguhpoyaylstpsotansgylftanshfhdcxfeylvytygyvsftdsvtbdcklgoevtgyrhwsknfplaolwzdyjsksktasdymssrchvstansgrhdcxuotyhgntcwgaosasreldmtwdpegdnldymnbbaeaalbhhynpygmdmdlhsmhjplacfoycsfncsfgoycscstpsoiafyhsjtoyaxtpsotansghhdfzzowzndswprdezcnsvdchhnbgmtateoplykehlgtektctkstamwlrjtuofspttapffpindagyfnmogusbmwfnmydapyjnvyjzchbyingtlfkttlrekbdponlfwdpkotlsfsqzaemh",
 │       "pet_name": "Dan"
 │     },
-│     "ur:xid/hdcxrlktoxmdfpktlfndssspveylesfnoxhftodpcygenlryyksrnywlsgwedmdlcfcpjerdfyty": {
-│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxrlktoxmdfpktlfndssspveylesfnoxhftodpcygenlryyksrnywlsgwedmdlcfcpoyaylstpsotansgylftanshfhdcxbycsndmwahpedwrhkndpmyylaessdyguwemydlmtaajpmetkgrjlaximgtjzfywntansgrhdcxestkjkdisacnrhzoemeelsfloydyrfeocninhpotnbaacwylldsrcettehbtmubwoycsfncsfgoycscstpsoihfpjziniaihoyaxtpsotansghhdfzjniydrksmeztatzmbzenprpyqdskotlepsaytndwrfdabademszofgdrpywfspehmtfhbgztkbinvlvogaltchgslstdwnzcckckdyhldimddecfwthpjnzeahktnldnspghosad",
+│     "ur:xid/hdcxtlgswylucwjttyetlsdakphheywszcskcenylkpdkpwppfkoimonfhhyrhammuihsofsghcm": {
+│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxtlgswylucwjttyetlsdakphheywszcskcenylkpdkpwppfkoimonfhhyrhammuihoyaylstpsotansgylftanshfhdcxynineogatlptsejsplclftwlbygeptzmgosbcfvopmdmrdrnoyaxpeykrdhtlpemtansgrhdcxuevwaxfzahaoveprlnwpluuroytsykvdkpctzsjtcejoossttscnselolbzstbaooycsfncsfgoycscstpsoihfpjziniaihoyaxtpsotansghhdfzhfaectytcfhyehjkhedprszsgdmdmdjthpdahndknniosbsaswieehlbnbbgayvwtbrezckthdatnbdmcpgwtobelrksfgaymwmtwehsemvlprwlfretzcadeefytnmuwnmeolvo",
 │       "pet_name": "Alice"
 │     }
 │   }
@@ -189,20 +189,20 @@ cat "$CAROL_REGISTRY"
 
 │ {
 │   "owner": {
-│     "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxgrswfhbswltpnysreczewzltsaidmnflfpjyzmcxnsbbdnfhlujezcdadtwfkklfoyaylrtpsotansgylftanshfhdcxgobncnleflfxpsbwkeaykbpfcfkilypldrvstypelybyloosfpfseyfgmnpawfhttansgrhdcxdwktgyinjtfhmntopssptattcanyjefghydtiawpskjkzttoiemsttmkjykptibdlfoycsfptpsotansgtlftansgohdcxplostponfxaxrsiakohtjtbdvejsmelrvlmwptvdsnaomstyuogylshncmhkzouotansgehdcxchgafgatimchahtsytdyamksmssolpmoaajeftbacmzcnsesateyseentklggdpfoybstpsotansgmhdcxqddmbkcxwzcnpdryzosaecehztcwuygswepeqdeyftemsndediwlbdmelgswcffzoycsfncsfgoycscstpsoihfxhsjpjljzoyaxtpsotansghhdfzuoesndztsnmyrdgrgtgmcywmwdfevlamrhnlpyeespvtwmfhpdlajelsckuyttsptinlpfnbtocmcyckfhaaroaedtcynylttkcsieoxbbbemkoytdfxbekinnzstsosiofdlrtd",
+│     "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxhdeyfgjosnnyleckjybagyadvwcfestsytrniegmueuocmhskorhvehhrybekedloyaylrtpsotansgylftanshfhdcxeswmzmwmlnesytfywmsamkpydslfglotmnvobzbkfzfwotplnbtotkhpaeesdsjstansgrhdcxdetpbnkpfndmwnosgolatifgjteeuomhecbgecpllafdjztkgtlbfgpmvwbkbdahoycsfncsfglfoycsfptpsotansgtlftansgohdcxhgashkcwlguestwevsdlrpbdtoksghlrostiecgygmfdytchskstuypatnvlbzjltansgehdcxtlrykkiokkamasmudwolskdarkcwpetpftgabkcffxglclhdemgrcwhfpfbkehmuoybstpsotansgmhdcxoslumwrygyyacaensggalnwdtyyljkkpwsceutqzbbqzwtbafetdsoehtpeejedioycscstpsoihfxhsjpjljzoyaxtpsotansghhdfzgsetamfgvahnlrotsfzcghcpidcfgljystmdstgttegdmobgierhgyisgyfhfmglloehtagwpscmltgyrnclbzlbzmhgpkghpkgaiabnhlotjlbwfelofrvogtwpprkihhbtynlt",
 │     "pet_name": "Carol"
 │   },
 │   "participants": {
-│     "ur:xid/hdcxcndkssieplbefhmyrfcmlstachgyvtnlveehgrlesotsmyplgtrfptgyprinfxceueutdthh": {
-│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxcndkssieplbefhmyrfcmlstachgyvtnlveehgrlesotsmyplgtrfptgyprinfxceoyaylstpsotansgylftanshfhdcxgagunnolutjtvazorefzuovortltknbshdtthhtyclrhjebyhfzotnckveurromdtansgrhdcxsesfpflolppdrpimhsttcygszchnykahyniymukigwlrqdsorlrhfgmhlfrpzmhkoycsfncsfgoycscstpsoiafwjlidoyaxtpsotansghhdfzseemisgowthdtsjppacfvyinlaeyaepeoylafrfesrcmwtfraaisckluvddwayuyhlzewtswaxaoiomuuoredkkeghtdsehlndmemkbzdsfsiyiaadrhdrbacwbktbsntewztlke",
+│     "ur:xid/hdcxlsvspsmsbzimsbcwcxjyjzgyldihstossgbtcawmgurpbdcplfhyhgtdfhectnfzlbkiaaje": {
+│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxlsvspsmsbzimsbcwcxjyjzgyldihstossgbtcawmgurpbdcplfhyhgtdfhectnfzoyaylstpsotansgylftanshfhdcxhhvyjkdtpedydrqzjpnnlobbhtvemsgrpasfwpmhadjlhfcpmwytlsnllebbprwptansgrhdcxfxfsdygrfldksesoghsfvsrhoydsmybynsdmesvyjorogsskskiylkctmtzossgdoycsfncsfgoycscstpsoiafwjlidoyaxtpsotansghhdfzvtmnfliotbjldiotjntposurykmdurfsrnnsfyiowtjlsffxcmfrfnyljlaytoaaahztgyfdroswmourpfkipkknzeotieamoywngybavwatutceayjkbgntbduepmzennktteid",
 │       "pet_name": "Bob"
 │     },
-│     "ur:xid/hdcxqzmdsrnyfncmgmprgofhdrbtctvahkcmloyaynksehbsvliafnfyjtlfgouyuopddeftfmhe": {
-│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxqzmdsrnyfncmgmprgofhdrbtctvahkcmloyaynksehbsvliafnfyjtlfgouyuopdoyaylstpsotansgylftanshfhdcxftutbttozsrfyacnhnfeehlkgycsjeknoeroesssjleerdhnnlmkmokpaomycxpftansgrhdcxuegscenbayltfyonhlhplgmtvagliapdhlwewkknatskgrqdsrvoqzlyievsdiceoycsfncsfgoycscstpsoiafyhsjtoyaxtpsotansghhdfzechpincsyaetsrflzskojkplpdfztpjsswettphtosdnaatavwjocsdkpagwvytknyztdkjyadgeplfzhdonsfbgtniypdimjkehfdhgnnresphhcejevltkehtnbsinehamrkkt",
+│     "ur:xid/hdcxnyeokgiyjkeycstlfwclskgtgtprvljtbdkplujygswkosbkgrwzldpljyioguhpiyfyhhpy": {
+│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxnyeokgiyjkeycstlfwclskgtgtprvljtbdkplujygswkosbkgrwzldpljyioguhpoyaylstpsotansgylftanshfhdcxfeylvytygyvsftdsvtbdcklgoevtgyrhwsknfplaolwzdyjsksktasdymssrchvstansgrhdcxuotyhgntcwgaosasreldmtwdpegdnldymnbbaeaalbhhynpygmdmdlhsmhjplacfoycsfncsfgoycscstpsoiafyhsjtoyaxtpsotansghhdfzzowzndswprdezcnsvdchhnbgmtateoplykehlgtektctkstamwlrjtuofspttapffpindagyfnmogusbmwfnmydapyjnvyjzchbyingtlfkttlrekbdponlfwdpkotlsfsqzaemh",
 │       "pet_name": "Dan"
 │     },
-│     "ur:xid/hdcxrlktoxmdfpktlfndssspveylesfnoxhftodpcygenlryyksrnywlsgwedmdlcfcpjerdfyty": {
-│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxrlktoxmdfpktlfndssspveylesfnoxhftodpcygenlryyksrnywlsgwedmdlcfcpoyaylstpsotansgylftanshfhdcxbycsndmwahpedwrhkndpmyylaessdyguwemydlmtaajpmetkgrjlaximgtjzfywntansgrhdcxestkjkdisacnrhzoemeelsfloydyrfeocninhpotnbaacwylldsrcettehbtmubwoycsfncsfgoycscstpsoihfpjziniaihoyaxtpsotansghhdfzjniydrksmeztatzmbzenprpyqdskotlepsaytndwrfdabademszofgdrpywfspehmtfhbgztkbinvlvogaltchgslstdwnzcckckdyhldimddecfwthpjnzeahktnldnspghosad",
+│     "ur:xid/hdcxtlgswylucwjttyetlsdakphheywszcskcenylkpdkpwppfkoimonfhhyrhammuihsofsghcm": {
+│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxtlgswylucwjttyetlsdakphheywszcskcenylkpdkpwppfkoimonfhhyrhammuihoyaylstpsotansgylftanshfhdcxynineogatlptsejsplclftwlbygeptzmgosbcfvopmdmrdrnoyaxpeykrdhtlpemtansgrhdcxuevwaxfzahaoveprlnwpluuroytsykvdkpctzsjtcejoossttscnselolbzstbaooycsfncsfgoycscstpsoihfpjziniaihoyaxtpsotansghhdfzhfaectytcfhyehjkhedprszsgdmdmdjthpdahndknniosbsaswieehlbnbbgayvwtbrezckthdatnbdmcpgwtobelrksfgaymwmtwehsemvlprwlfretzcadeefytnmuwnmeolvo",
 │       "pet_name": "Alice"
 │     }
 │   }
@@ -223,20 +223,20 @@ cat "$DAN_REGISTRY"
 
 │ {
 │   "owner": {
-│     "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxqzmdsrnyfncmgmprgofhdrbtctvahkcmloyaynksehbsvliafnfyjtlfgouyuopdoyaylrtpsotansgylftanshfhdcxftutbttozsrfyacnhnfeehlkgycsjeknoeroesssjleerdhnnlmkmokpaomycxpftansgrhdcxuegscenbayltfyonhlhplgmtvagliapdhlwewkknatskgrqdsrvoqzlyievsdiceoycsfncsfgoycscstpsoiafyhsjtlfoycsfptpsotansgtlftansgohdcxgubdbgtbyafdhnrfiyfyrnswvwoxwdttftgwsrfgnsytaooycsutkbsruyrkiyrltansgehdcxgmsppmpfyasrfejlgahgrohfvaronydmftenfwidaetigoceynfgsaimplhfsgchoybstpsotansgmhdcxwkbddpfmskwkwdkkmdleotfwhsdmpdtohtiadmeeghfgbnsadrytdtdknehgjpuyoyaxtpsotansghhdfzjnzmzmksbejshsplaytltpfxbzspmeolrsaxjlhsltfzrpwzfrinjozmftcedlwketwfleeylurnurdsnesngwwsbafhuyqzbycpzsueqzmwpmghylhelsidkojykofpchlowygd",
+│     "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxnyeokgiyjkeycstlfwclskgtgtprvljtbdkplujygswkosbkgrwzldpljyioguhpoyaylrtpsotansgylftanshfhdcxfeylvytygyvsftdsvtbdcklgoevtgyrhwsknfplaolwzdyjsksktasdymssrchvstansgrhdcxuotyhgntcwgaosasreldmtwdpegdnldymnbbaeaalbhhynpygmdmdlhsmhjplacfoycsfncsfglfoycsfptpsotansgtlftansgohdcxbdstkefwwsjswteczmgyktfsecgmoseskedwfzdezsmsdicxbdhgfdlagorpcpeetansgehdcxbwbayaksvarnetswtpswcyjzfsotahspjyvtkeeolkdstymyhsoygspesssprtcaoybstpsotansgmhdcxjkmtenvlckcfeowyloghryoyckkkwelytdhycwflonpktsvsiooxmshdghglwlzmoycscstpsoiafyhsjtoyaxtpsotansghhdfzkgbylrteotdklgsbykdapdecfwkkvwwslgwkteembbcptkbbhturfzckhepkotwspdlsndltseeoknjodmettbihrsjkskrfaxdtckwponlbnthgykkiensgbzploncwcazolgot",
 │     "pet_name": "Dan"
 │   },
 │   "participants": {
-│     "ur:xid/hdcxcndkssieplbefhmyrfcmlstachgyvtnlveehgrlesotsmyplgtrfptgyprinfxceueutdthh": {
-│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxcndkssieplbefhmyrfcmlstachgyvtnlveehgrlesotsmyplgtrfptgyprinfxceoyaylstpsotansgylftanshfhdcxgagunnolutjtvazorefzuovortltknbshdtthhtyclrhjebyhfzotnckveurromdtansgrhdcxsesfpflolppdrpimhsttcygszchnykahyniymukigwlrqdsorlrhfgmhlfrpzmhkoycsfncsfgoycscstpsoiafwjlidoyaxtpsotansghhdfzseemisgowthdtsjppacfvyinlaeyaepeoylafrfesrcmwtfraaisckluvddwayuyhlzewtswaxaoiomuuoredkkeghtdsehlndmemkbzdsfsiyiaadrhdrbacwbktbsntewztlke",
-│       "pet_name": "Bob"
-│     },
-│     "ur:xid/hdcxgrswfhbswltpnysreczewzltsaidmnflfpjyzmcxnsbbdnfhlujezcdadtwfkklfvlrhrhcw": {
-│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxgrswfhbswltpnysreczewzltsaidmnflfpjyzmcxnsbbdnfhlujezcdadtwfkklfoyaylstpsotansgylftanshfhdcxgobncnleflfxpsbwkeaykbpfcfkilypldrvstypelybyloosfpfseyfgmnpawfhttansgrhdcxdwktgyinjtfhmntopssptattcanyjefghydtiawpskjkzttoiemsttmkjykptibdoycsfncsfgoycscstpsoihfxhsjpjljzoyaxtpsotansghhdfzpkwdisjogmcfbweyotisgohsdawldtzobtideydaksayetynlrlrcxesetaytbgrnllkeymkgleosshkhggalfzebtbsnesoynlraygovejotpfpkbyllrdpwecaeoiebstteslb",
+│     "ur:xid/hdcxhdeyfgjosnnyleckjybagyadvwcfestsytrniegmueuocmhskorhvehhrybekedlndhtykgh": {
+│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxhdeyfgjosnnyleckjybagyadvwcfestsytrniegmueuocmhskorhvehhrybekedloyaylstpsotansgylftanshfhdcxeswmzmwmlnesytfywmsamkpydslfglotmnvobzbkfzfwotplnbtotkhpaeesdsjstansgrhdcxdetpbnkpfndmwnosgolatifgjteeuomhecbgecpllafdjztkgtlbfgpmvwbkbdahoycsfncsfgoycscstpsoihfxhsjpjljzoyaxtpsotansghhdfzskotvtwnferecahnprdisnrsdefnnlrphpjpfyvolpfrfgehuesebeecfmcaclmerhlawpfxsotlfsbnmkmsftpsbtkilkpdrydsmdlfchendwgdlnbgzelfprcpadbahymwktqd",
 │       "pet_name": "Carol"
 │     },
-│     "ur:xid/hdcxrlktoxmdfpktlfndssspveylesfnoxhftodpcygenlryyksrnywlsgwedmdlcfcpjerdfyty": {
-│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxrlktoxmdfpktlfndssspveylesfnoxhftodpcygenlryyksrnywlsgwedmdlcfcpoyaylstpsotansgylftanshfhdcxbycsndmwahpedwrhkndpmyylaessdyguwemydlmtaajpmetkgrjlaximgtjzfywntansgrhdcxestkjkdisacnrhzoemeelsfloydyrfeocninhpotnbaacwylldsrcettehbtmubwoycsfncsfgoycscstpsoihfpjziniaihoyaxtpsotansghhdfzjniydrksmeztatzmbzenprpyqdskotlepsaytndwrfdabademszofgdrpywfspehmtfhbgztkbinvlvogaltchgslstdwnzcckckdyhldimddecfwthpjnzeahktnldnspghosad",
+│     "ur:xid/hdcxlsvspsmsbzimsbcwcxjyjzgyldihstossgbtcawmgurpbdcplfhyhgtdfhectnfzlbkiaaje": {
+│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxlsvspsmsbzimsbcwcxjyjzgyldihstossgbtcawmgurpbdcplfhyhgtdfhectnfzoyaylstpsotansgylftanshfhdcxhhvyjkdtpedydrqzjpnnlobbhtvemsgrpasfwpmhadjlhfcpmwytlsnllebbprwptansgrhdcxfxfsdygrfldksesoghsfvsrhoydsmybynsdmesvyjorogsskskiylkctmtzossgdoycsfncsfgoycscstpsoiafwjlidoyaxtpsotansghhdfzvtmnfliotbjldiotjntposurykmdurfsrnnsfyiowtjlsffxcmfrfnyljlaytoaaahztgyfdroswmourpfkipkknzeotieamoywngybavwatutceayjkbgntbduepmzennktteid",
+│       "pet_name": "Bob"
+│     },
+│     "ur:xid/hdcxtlgswylucwjttyetlsdakphheywszcskcenylkpdkpwppfkoimonfhhyrhammuihsofsghcm": {
+│       "xid_document": "ur:xid/tpsplftpsplftpsotanshdhdcxtlgswylucwjttyetlsdakphheywszcskcenylkpdkpwppfkoimonfhhyrhammuihoyaylstpsotansgylftanshfhdcxynineogatlptsejsplclftwlbygeptzmgosbcfvopmdmrdrnoyaxpeykrdhtlpemtansgrhdcxuevwaxfzahaoveprlnwpluuroytsykvdkpctzsjtcejoossttscnselolbzstbaooycsfncsfgoycscstpsoihfpjziniaihoyaxtpsotansghhdfzhfaectytcfhyehjkhedprszsgdmdmdjthpdahndknniosbsaswieehlbnbbgayvwtbrezckthdatnbdmcpgwtobelrksfgaymwmtwehsemvlprwlfretzcadeefytnmuwnmeolvo",
 │       "pet_name": "Alice"
 │     }
 │   }
@@ -251,30 +251,14 @@ Create a 2-of-3 DKG invite for Bob, Carol, and Dan (from Alice's registry) and f
 ALICE_INVITE=$(frost dkg invite show --registry demo/alice-registry.json --min-signers 2 --charter "This group will authorize new club editions." Bob Carol Dan)
 echo "${ALICE_INVITE}" | envelope format
 
-│ request(ARID(8002e761)) [
+│ request(ARID(cab36adc)) [
 │     'body': «"dkgGroupInvite"» [
 │         ❰"charter"❱: "This group will authorize new club editions."
 │         ❰"minSigners"❱: 2
 │         ❰"participant"❱: {
 │             {
-│                 XID(2324c464) [
-│                     'key': PublicKeys(5bd10f97, SigningPublicKey(2324c464, SchnorrPublicKey(1c0c3c7b)), EncapsulationPublicKey(b078fc88, X25519PublicKey(b078fc88))) [
-│                         'allow': 'All'
-│                         'nickname': "Bob"
-│                     ]
-│                 ]
-│             } [
-│                 'signed': Signature
-│             ]
-│         } [
-│             "response_arid": ENCRYPTED [
-│                 'hasRecipient': SealedMessage
-│             ]
-│         ]
-│         ❰"participant"❱: {
-│             {
-│                 XID(4bc63f0f) [
-│                     'key': PublicKeys(aa3e2205, SigningPublicKey(4bc63f0f, SchnorrPublicKey(74ead97d)), EncapsulationPublicKey(3ea59975, X25519PublicKey(3ea59975))) [
+│                 XID(58324670) [
+│                     'key': PublicKeys(2a4994a7, SigningPublicKey(58324670, SchnorrPublicKey(b7b2796f)), EncapsulationPublicKey(1f48813a, X25519PublicKey(1f48813a))) [
 │                         'allow': 'All'
 │                         'nickname': "Carol"
 │                     ]
@@ -289,8 +273,24 @@ echo "${ALICE_INVITE}" | envelope format
 │         ]
 │         ❰"participant"❱: {
 │             {
-│                 XID(b495c39a) [
-│                     'key': PublicKeys(9bf773e4, SigningPublicKey(b495c39a, SchnorrPublicKey(9021485f)), EncapsulationPublicKey(b03a6aef, X25519PublicKey(b03a6aef))) [
+│                 XID(83e8ac97) [
+│                     'key': PublicKeys(2aa87cc5, SigningPublicKey(83e8ac97, SchnorrPublicKey(e46aef5b)), EncapsulationPublicKey(114ce2a9, X25519PublicKey(114ce2a9))) [
+│                         'allow': 'All'
+│                         'nickname': "Bob"
+│                     ]
+│                 ]
+│             } [
+│                 'signed': Signature
+│             ]
+│         } [
+│             "response_arid": ENCRYPTED [
+│                 'hasRecipient': SealedMessage
+│             ]
+│         ]
+│         ❰"participant"❱: {
+│             {
+│                 XID(9a337b66) [
+│                     'key': PublicKeys(07ddb212, SigningPublicKey(9a337b66, SchnorrPublicKey(9ac3488b)), EncapsulationPublicKey(80c2ddc4, X25519PublicKey(80c2ddc4))) [
 │                         'allow': 'All'
 │                         'nickname': "Dan"
 │                     ]
@@ -303,10 +303,10 @@ echo "${ALICE_INVITE}" | envelope format
 │                 'hasRecipient': SealedMessage
 │             ]
 │         ]
-│         ❰"session"❱: ARID(f2076720)
-│         ❰"validUntil"❱: 2025-11-24T08:47:13Z
+│         ❰"session"❱: ARID(969152e0)
+│         ❰"validUntil"❱: 2025-11-24T08:58:11Z
 │     ]
-│     'date': 2025-11-24T07:47:13Z
+│     'date': 2025-11-24T07:58:11Z
 │ ]
 ```
 
@@ -347,7 +347,7 @@ Seal the invite and store it in Hubert using the default server backend; the pri
 ALICE_INVITE_ARID=$(frost dkg invite put --storage server --registry demo/alice-registry.json --min-signers 2 --charter "This group will authorize new club editions." Bob Carol Dan)
 echo "${ALICE_INVITE_ARID}"
 
-│ ur:arid/hdcxztwnsnidjkkneektqdltbsaxdepmsszstklehgnnfthyzsgrlsbbvtttgwsgaotareiopssa
+│ ur:arid/hdcxfyhdjybgttweoxrnrtmunnwsdaematosfhoxbwsefxaoiowkyldlaslucydrvygukncypace
 ```
 
 ## Viewing invite from Hubert as Bob
@@ -359,7 +359,7 @@ frost dkg invite view --storage server --registry demo/bob-registry.json "${ALIC
 
 │ Charter: This group will authorize new club editions.
 │ Min signers: 2
-│ Participants: Carol, Dan, Bob
-│ Reply ARID: ur:arid/hdcxrtaewegejedesglrosmedplokkckctuolfzmvtetioroenpdfgasnsbkzcenpkwfislawpzt
+│ Participants: Dan, Carol, Bob
+│ Reply ARID: ur:arid/hdcxmonnidndfmssoswtttdeontohhtotstbbnfttitirhjkdehlmoiyrytatpwndkndmkndcybk
 ```
 

@@ -163,7 +163,7 @@ pub struct DkgInvitation {
     sender: XIDDocument, // Coordinator who sent the invite
     request_id: ARID,    // The GSTP request ID for correlated responses
     peer_continuation: Option<Envelope>, /* Continuation (if any) to return
-                                          * to sender */
+                          * to sender */
     min_signers: usize, // Minimum signers required
     charter: String,    // Charter text (may be empty)
     session_id: ARID,   // Identifier for the DKG session
