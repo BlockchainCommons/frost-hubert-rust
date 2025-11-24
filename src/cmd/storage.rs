@@ -1,5 +1,11 @@
-use anyhow::{Result, bail};
+use anyhow::{Result, anyhow, bail};
+use bc_components::ARID;
+use bc_envelope::Envelope;
 use clap::{Args, ValueEnum};
+use hubert::{
+    KvStore, hybrid::HybridKv, ipfs::IpfsKv, mainline::MainlineDhtKv,
+    server::ServerKvClient,
+};
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 #[doc(hidden)]
@@ -64,6 +70,58 @@ impl StorageSelector {
                 Ok(StorageSelection::Server { host, port })
             }
         }
+    }
+}
+
+/// Helper that opens the selected Hubert storage backend.
+pub enum StorageClient {
+    Mainline(MainlineDhtKv),
+    Ipfs(IpfsKv),
+    Hybrid(HybridKv),
+    Server(ServerKvClient),
+}
+
+impl StorageClient {
+    pub async fn from_selection(selection: StorageSelection) -> Result<Self> {
+        match selection {
+            StorageSelection::Mainline => {
+                Ok(Self::Mainline(MainlineDhtKv::new().await?))
+            }
+            StorageSelection::Ipfs { port } => {
+                let url = format!("http://127.0.0.1:{port}");
+                Ok(Self::Ipfs(IpfsKv::new(&url)))
+            }
+            StorageSelection::Hybrid { port } => {
+                let url = format!("http://127.0.0.1:{port}");
+                Ok(Self::Hybrid(HybridKv::new(&url).await?))
+            }
+            StorageSelection::Server { host, port } => {
+                let url = format!("http://{host}:{port}");
+                Ok(Self::Server(ServerKvClient::new(&url)))
+            }
+        }
+    }
+
+    pub async fn put(
+        &self,
+        arid: &ARID,
+        envelope: &Envelope,
+    ) -> Result<String> {
+        match self {
+            StorageClient::Mainline(store) => {
+                store.put(arid, envelope, None, false).await
+            }
+            StorageClient::Ipfs(store) => {
+                store.put(arid, envelope, None, false).await
+            }
+            StorageClient::Hybrid(store) => {
+                store.put(arid, envelope, None, false).await
+            }
+            StorageClient::Server(store) => {
+                store.put(arid, envelope, None, false).await
+            }
+        }
+        .map_err(|err| anyhow!(err))
     }
 }
 

@@ -1,15 +1,19 @@
 use std::{collections::HashSet, time::Duration};
 
-use anyhow::{Result, bail, Context};
+use anyhow::{Context, Result, bail};
 use bc_components::{ARID, XID};
 use bc_envelope::prelude::*;
 use clap::{Parser, Subcommand};
 use gstp::SealedRequestBehavior;
+use tokio::runtime::Runtime;
 
 use crate::{
-    cmd::registry::participants_file_path,
-    registry::{ParticipantRecord, Registry},
     DkgGroupInvite,
+    cmd::{
+        registry::participants_file_path,
+        storage::{StorageClient, StorageSelector},
+    },
+    registry::{ParticipantRecord, Registry},
 };
 
 #[derive(Debug, Parser)]
@@ -46,12 +50,15 @@ pub struct InviteArgs {
 enum InviteCommands {
     /// Show a DKG invite for the given participants
     Show(InviteShowArgs),
+    /// Create a sealed DKG invite and store it in Hubert
+    Put(InvitePutArgs),
 }
 
 impl InviteArgs {
     pub fn exec(self) -> Result<()> {
         match self.command {
             InviteCommands::Show(args) => args.exec(),
+            InviteCommands::Put(args) => args.exec(),
         }
     }
 }
@@ -82,47 +89,11 @@ pub struct InviteShowArgs {
 
 impl InviteShowArgs {
     pub fn exec(self) -> Result<()> {
-        let registry_path = participants_file_path(self.registry.clone())?;
-        let registry =
-            Registry::load(&registry_path).with_context(|| {
-                format!("Failed to load registry at {}", registry_path.display())
-            })?;
-
-        let resolved = resolve_participants(&registry, &self.participants)?;
-        let participant_docs: Vec<String> = resolved
-            .iter()
-            .map(|(_, record)| record.xid_document_ur().to_owned())
-            .collect();
-        let response_arids: Vec<ARID> =
-            (0..participant_docs.len()).map(|_| ARID::new()).collect();
-
-        let participant_count = participant_docs.len();
-        if participant_count < 2 {
-            bail!("At least two participants are required for a DKG invite");
-        }
-        let min_signers =
-            self.min_signers.unwrap_or(participant_count);
-        if min_signers < 2 {
-            bail!("--min-signers must be at least 2");
-        }
-        if min_signers > participant_count {
-            bail!("--min-signers cannot exceed participant count");
-        }
-
-        let invite = DkgGroupInvite::new(
-            ARID::new(),
-            registry
-                .owner()
-                .context("Registry owner is required to issue invites")?
-                .xid_document()
-                .clone(),
-            ARID::new(),
-            Date::now(),
-            Date::with_duration_from_now(Duration::from_secs(60 * 60)),
-            min_signers,
+        let invite = build_invite(
+            self.registry,
+            self.min_signers,
             self.charter,
-            participant_docs,
-            response_arids,
+            self.participants,
         )?;
 
         if self.sealed {
@@ -134,6 +105,51 @@ impl InviteShowArgs {
         }
 
         Ok(())
+    }
+}
+
+#[derive(Debug, Parser)]
+#[doc(hidden)]
+pub struct InvitePutArgs {
+    #[command(flatten)]
+    storage: StorageSelector,
+
+    /// Optional registry path or filename override
+    #[arg(long = "registry", value_name = "PATH")]
+    registry: Option<String>,
+
+    /// Minimum signers required; defaults to participant count
+    #[arg(long = "min-signers", value_name = "N")]
+    min_signers: Option<usize>,
+
+    /// Charter statement for the DKG session
+    #[arg(long = "charter", value_name = "STRING", default_value = "")]
+    charter: String,
+
+    /// Participants to include, by pet name or ur:xid identifier
+    #[arg(required = true, value_name = "PARTICIPANT")]
+    participants: Vec<String>,
+}
+
+impl InvitePutArgs {
+    pub fn exec(self) -> Result<()> {
+        let selection = self.storage.resolve()?;
+        let invite = build_invite(
+            self.registry,
+            self.min_signers,
+            self.charter,
+            self.participants,
+        )?;
+        let envelope = invite.to_envelope()?;
+        let arid = ARID::new();
+
+        let runtime = Runtime::new()?;
+        runtime.block_on(async move {
+            let client = StorageClient::from_selection(selection).await?;
+            client.put(&arid, &envelope).await?;
+            println!("{}", arid.ur_string());
+            Ok(())
+        })
     }
 }
 
@@ -182,4 +198,52 @@ fn resolve_participants(
     }
 
     Ok(resolved)
+}
+
+fn build_invite(
+    registry_arg: Option<String>,
+    min_signers_arg: Option<usize>,
+    charter: String,
+    participants: Vec<String>,
+) -> Result<DkgGroupInvite> {
+    let registry_path = participants_file_path(registry_arg.clone())?;
+    let registry = Registry::load(&registry_path).with_context(|| {
+        format!("Failed to load registry at {}", registry_path.display())
+    })?;
+
+    let resolved = resolve_participants(&registry, &participants)?;
+    let participant_docs: Vec<String> = resolved
+        .iter()
+        .map(|(_, record)| record.xid_document_ur().to_owned())
+        .collect();
+    let response_arids: Vec<ARID> =
+        (0..participant_docs.len()).map(|_| ARID::new()).collect();
+
+    let participant_count = participant_docs.len();
+    if participant_count < 2 {
+        bail!("At least two participants are required for a DKG invite");
+    }
+    let min_signers = min_signers_arg.unwrap_or(participant_count);
+    if min_signers < 2 {
+        bail!("--min-signers must be at least 2");
+    }
+    if min_signers > participant_count {
+        bail!("--min-signers cannot exceed participant count");
+    }
+
+    DkgGroupInvite::new(
+        ARID::new(),
+        registry
+            .owner()
+            .context("Registry owner is required to issue invites")?
+            .xid_document()
+            .clone(),
+        ARID::new(),
+        Date::now(),
+        Date::with_duration_from_now(Duration::from_secs(60 * 60)),
+        min_signers,
+        charter,
+        participant_docs,
+        response_arids,
+    )
 }

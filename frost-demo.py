@@ -494,6 +494,27 @@ echo "${{ALICE_INVITE_SEALED}}" | envelope info
             ),
         )
 
+        run_step(
+            shell,
+            "Checking Hubert server availability",
+            "frost check --storage server",
+            "Verify the local Hubert server is responding before publishing the invite.",
+        )
+
+        run_step(
+            shell,
+            "Posting sealed DKG invite to Hubert",
+            f"""
+ALICE_INVITE_ARID=$(frost dkg invite put --storage server --registry {qp(REGISTRIES["alice"])} --min-signers 2 --charter "This group will authorize new club editions." Bob Carol Dan)
+echo "${{ALICE_INVITE_ARID}}"
+""",
+            commentary=(
+                "Seal the invite and store it in Hubert using the default server backend; "
+                "the printed ARID (UR) can be shared out-of-band."
+            ),
+        )
+
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 
 PATH_OBJECTS: set[Path] = set()

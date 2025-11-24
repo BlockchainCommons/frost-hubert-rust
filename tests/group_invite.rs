@@ -163,7 +163,15 @@ fn test_dkg_group_invite() {
             'date': 2025-12-31
         ]
     "#}).trim();
-    assert_actual_expected!(invite.to_request().unwrap().request().to_envelope().format(), expected_format);
+    assert_actual_expected!(
+        invite
+            .to_request()
+            .unwrap()
+            .request()
+            .to_envelope()
+            .format(),
+        expected_format
+    );
 
     let gstp_envelope = invite.to_envelope().unwrap();
 
@@ -177,13 +185,9 @@ fn test_dkg_group_invite() {
     "#}).trim();
     assert_actual_expected!(gstp_envelope.format(), expected_format);
 
-    let alice_invite = DkgInvitation::from_invite(
-        gstp_envelope,
-        date,
-        &coordinator,
-        &alice,
-    )
-    .unwrap();
+    let alice_invite =
+        DkgInvitation::from_invite(gstp_envelope, date, &coordinator, &alice)
+            .unwrap();
 
     assert_eq!(alice_invite.sender().xid(), coordinator.xid());
     assert_eq!(alice_invite.response_arid(), alice_response_arid);
@@ -214,15 +218,10 @@ fn test_dkg_group_invite() {
             ]
         ]
     "#}).trim();
-    assert_actual_expected!(
-        success_envelope.format(),
-        expected_success_format
-    );
+    assert_actual_expected!(success_envelope.format(), expected_success_format);
 
-    let decline_response = alice_invite.to_response(
-        DkgInvitationResult::Declined("Busy".to_string()),
-        &alice,
-    );
+    let decline_response = alice_invite
+        .to_response(DkgInvitationResult::Declined("Busy".to_string()), &alice);
     let decline_envelope =
         decline_response.to_envelope(None, None, None).unwrap();
 
@@ -241,10 +240,7 @@ fn test_dkg_group_invite() {
             ]
         ]
     "#}).trim();
-    assert_actual_expected!(
-        decline_envelope.format(),
-        expected_decline_format
-    );
+    assert_actual_expected!(decline_envelope.format(), expected_decline_format);
 
     let success_encrypted = alice_invite
         .to_envelope(DkgInvitationResult::Accepted, &alice)
@@ -259,6 +255,12 @@ fn test_dkg_group_invite() {
             'hasRecipient': SealedMessage
         ]
     "#}).trim();
-    assert_actual_expected!(success_encrypted.format(), expected_encrypted_format);
-    assert_actual_expected!(decline_encrypted.format(), expected_encrypted_format);
+    assert_actual_expected!(
+        success_encrypted.format(),
+        expected_encrypted_format
+    );
+    assert_actual_expected!(
+        decline_encrypted.format(),
+        expected_encrypted_format
+    );
 }

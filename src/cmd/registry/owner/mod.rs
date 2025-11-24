@@ -13,7 +13,8 @@ pub struct CommandArgs {
 #[derive(Debug, Subcommand)]
 #[doc(hidden)]
 enum Commands {
-    /// Set the registry owner using an ur:xid document that includes private keys
+    /// Set the registry owner using an ur:xid document that includes private
+    /// keys
     Set(set::CommandArgs),
 }
 

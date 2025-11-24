@@ -35,7 +35,9 @@ async fn run_check(selection: StorageSelection) -> Result<()> {
             println!("✓ Hybrid storage is available (DHT + IPFS)");
             Ok(())
         }
-        StorageSelection::Server { host, port } => check_server(&host, port).await,
+        StorageSelection::Server { host, port } => {
+            check_server(&host, port).await
+        }
     }
 }
 
@@ -101,25 +103,30 @@ async fn check_server(host: &str, port: u16) -> Result<()> {
                         } else {
                             bail!(
                                 "✗ Server at {}:{} is not a Hubert server",
-                                host, port
+                                host,
+                                port
                             );
                         }
                     } else {
                         bail!(
                             "✗ Server at {}:{} returned invalid health response",
-                            host, port
+                            host,
+                            port
                         );
                     }
                 } else {
                     bail!(
                         "✗ Server at {}:{} returned invalid health response",
-                        host, port
+                        host,
+                        port
                     );
                 }
             } else {
                 bail!(
                     "✗ Server at {}:{} is not available (status: {})",
-                    host, port, response.status()
+                    host,
+                    port,
+                    response.status()
                 );
             }
         }
@@ -129,7 +136,8 @@ async fn check_server(host: &str, port: u16) -> Result<()> {
         Err(_) => {
             bail!(
                 "✗ Server is not available at {}:{}: connection timeout",
-                host, port
+                host,
+                port
             )
         }
     }

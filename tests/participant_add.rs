@@ -43,8 +43,8 @@ fn participant_add_creates_registry_and_is_idempotent() {
         temp.path(),
         &["registry", "participant", "add", &alice, "Alice"],
     )
-        .assert()
-        .success();
+    .assert()
+    .success();
 
     let path = registry_file(temp.path());
     let initial_state = fs::read_to_string(&path).unwrap();
@@ -54,9 +54,9 @@ fn participant_add_creates_registry_and_is_idempotent() {
         temp.path(),
         &["registry", "participant", "add", &alice, "Alice"],
     )
-        .assert()
-        .success()
-        .stdout(predicate::str::contains("already recorded"));
+    .assert()
+    .success()
+    .stdout(predicate::str::contains("already recorded"));
 
     let second_state = fs::read_to_string(&path).unwrap();
     assert_registry_matches(&second_state, ALICE_REGISTRY_JSON);
@@ -149,16 +149,16 @@ fn participant_add_conflicting_pet_name_fails() {
         temp.path(),
         &["registry", "participant", "add", &alice, "Alice"],
     )
-        .assert()
-        .success();
+    .assert()
+    .success();
 
     run_frost(
         temp.path(),
         &["registry", "participant", "add", &bob, "Alice"],
     )
-        .assert()
-        .failure()
-        .stderr(predicate::str::contains("already used"));
+    .assert()
+    .failure()
+    .stderr(predicate::str::contains("already used"));
 
     let content = fs::read_to_string(registry_file(temp.path())).unwrap();
     assert_registry_matches(&content, ALICE_REGISTRY_JSON);
@@ -174,15 +174,15 @@ fn participant_add_records_multiple_participants() {
         temp.path(),
         &["registry", "participant", "add", &alice, "Alice"],
     )
-        .assert()
-        .success();
+    .assert()
+    .success();
 
     run_frost(
         temp.path(),
         &["registry", "participant", "add", &bob, "Bob"],
     )
-        .assert()
-        .success();
+    .assert()
+    .success();
 
     let content = fs::read_to_string(registry_file(temp.path())).unwrap();
     assert_registry_matches(&content, ALICE_AND_BOB_REGISTRY_JSON);
@@ -197,11 +197,11 @@ fn participant_add_requires_signed_document() {
         temp.path(),
         &["registry", "participant", "add", &unsigned, "Unsigned"],
     )
-        .assert()
-        .failure()
-        .stderr(predicate::str::contains(
-            "XID document must be signed by its inception key",
-        ));
+    .assert()
+    .failure()
+    .stderr(predicate::str::contains(
+        "XID document must be signed by its inception key",
+    ));
 
     assert!(!registry_file(temp.path()).exists());
 }

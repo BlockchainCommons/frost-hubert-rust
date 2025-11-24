@@ -17,10 +17,7 @@ fn owner_set_with_participant_add_persists_both() {
     let owner_ur = make_owner_xid_ur();
     OwnerRecord::from_signed_xid_ur(owner_ur.clone()).unwrap();
 
-    run_frost(
-        temp.path(),
-        &["registry", "owner", "set", &owner_ur],
-    )
+    run_frost(temp.path(), &["registry", "owner", "set", &owner_ur])
         .assert()
         .success();
 
@@ -61,10 +58,7 @@ fn owner_set_requires_private_keys() {
     let temp = TempDir::new().unwrap();
     let unsigned_owner = fixture("alice_signed_xid.txt"); // lacks private keys
 
-    run_frost(
-        temp.path(),
-        &["registry", "owner", "set", &unsigned_owner],
-    )
+    run_frost(temp.path(), &["registry", "owner", "set", &unsigned_owner])
         .assert()
         .failure()
         .stderr(predicate::str::contains("must include private keys"));

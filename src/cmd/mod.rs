@@ -2,15 +2,15 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 
 #[doc(hidden)]
-pub mod dkg;
+pub mod check;
 #[doc(hidden)]
-pub mod registry;
+pub mod dkg;
 #[doc(hidden)]
 pub mod dkg_cli;
 #[doc(hidden)]
-pub mod storage;
+pub mod registry;
 #[doc(hidden)]
-pub mod check;
+pub mod storage;
 
 /// FROST command-line interface definition.
 #[derive(Debug, Parser)]

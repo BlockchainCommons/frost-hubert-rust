@@ -5,8 +5,7 @@ pub mod cmd;
 pub mod registry;
 
 pub use cmd::dkg::{
-    DkGProposedParticipant, DkgGroupInvite, DkgInvitation,
-    DkgInvitationResult,
+    DkGProposedParticipant, DkgGroupInvite, DkgInvitation, DkgInvitationResult,
 };
 
 /// Entrypoint shared by the binary and integration tests.

@@ -4,10 +4,10 @@ use std::{
 };
 
 mod common;
+use common::{fixture, run_frost};
 use indoc::indoc;
 use serde_json::Value;
 use tempfile::TempDir;
-use common::{fixture, run_frost};
 
 #[test]
 fn introductions_create_four_registries() {
@@ -25,8 +25,8 @@ fn introductions_create_four_registries() {
             temp.path(),
             &["registry", "owner", "set", &user.private_doc],
         )
-            .assert()
-            .success();
+        .assert()
+        .success();
 
         for other in &others {
             run_frost(

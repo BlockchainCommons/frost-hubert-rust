@@ -7,6 +7,7 @@ use gstp::{
     SealedRequest, SealedRequestBehavior, SealedResponse,
     SealedResponseBehavior,
 };
+
 use super::DkGProposedParticipant;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -157,14 +158,15 @@ pub enum DkgInvitationResult {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DkgInvitation {
-    response_arid: ARID,    // Hubert ARID at which to post the response
-    valid_until: Date,      // Expiration date of the invite
-    sender: XIDDocument,    // Coordinator who sent the invite
-    request_id: ARID,       // The GSTP request ID for correlated responses
-    peer_continuation: Option<Envelope>, // Continuation (if any) to return to sender
-    min_signers: usize,     // Minimum signers required
-    charter: String,        // Charter text (may be empty)
-    session_id: ARID,       // Identifier for the DKG session
+    response_arid: ARID, // Hubert ARID at which to post the response
+    valid_until: Date,   // Expiration date of the invite
+    sender: XIDDocument, // Coordinator who sent the invite
+    request_id: ARID,    // The GSTP request ID for correlated responses
+    peer_continuation: Option<Envelope>, /* Continuation (if any) to return
+                                          * to sender */
+    min_signers: usize, // Minimum signers required
+    charter: String,    // Charter text (may be empty)
+    session_id: ARID,   // Identifier for the DKG session
 }
 
 impl DkgInvitation {
@@ -197,11 +199,8 @@ impl DkgInvitation {
                 SealedResponse::new_success(self.request_id, recipient.clone())
             }
             DkgInvitationResult::Declined(reason) => {
-                SealedResponse::new_failure(
-                    self.request_id,
-                    recipient.clone(),
-                )
-                .with_error(reason)
+                SealedResponse::new_failure(self.request_id, recipient.clone())
+                    .with_error(reason)
             }
         };
 
@@ -216,9 +215,10 @@ impl DkgInvitation {
         recipient: &XIDDocument,
     ) -> Result<Envelope> {
         let response = self.to_response(response, recipient);
-        let signer_private_keys = recipient.inception_private_keys().ok_or_else(
-            || anyhow::anyhow!("Recipient XID document has no signing keys"),
-        )?;
+        let signer_private_keys =
+            recipient.inception_private_keys().ok_or_else(|| {
+                anyhow::anyhow!("Recipient XID document has no signing keys")
+            })?;
         let recipients = [self.sender()];
         Ok(response.to_envelope_for_recipients(
             Some(self.valid_until()),
@@ -230,10 +230,12 @@ impl DkgInvitation {
     /// Reverses `DkgGroupInvite::to_envelope` for a single participant.
     ///
     /// - Verifies the envelope is properly encrypted to the recipient.
-    /// - Verifies the decrypted envelope is a valid DKG group invite from the expected sender.
+    /// - Verifies the decrypted envelope is a valid DKG group invite from the
+    ///   expected sender.
     /// - Verifies the participant is included in the invite.
     /// - Decrypts the participant's response ARID.
-    /// - Extracts the `valid_until` date and ensures that it has not expired (> now).
+    /// - Extracts the `valid_until` date and ensures that it has not expired (>
+    ///   now).
     pub fn from_invite(
         invite: Envelope,
         now: Date,
@@ -275,12 +277,15 @@ impl DkgInvitation {
         let min_signers: usize = sealed_request
             .request()
             .extract_object_for_parameter("minSigners")?;
-        let charter: String =
-            sealed_request.request().extract_object_for_parameter("charter")?;
-        let session_id: ARID =
-            sealed_request.request().extract_object_for_parameter("session")?;
-        let participant_objects =
-            sealed_request.request().objects_for_parameter("participant");
+        let charter: String = sealed_request
+            .request()
+            .extract_object_for_parameter("charter")?;
+        let session_id: ARID = sealed_request
+            .request()
+            .extract_object_for_parameter("session")?;
+        let participant_objects = sealed_request
+            .request()
+            .objects_for_parameter("participant");
         if min_signers < 2 {
             anyhow::bail!("min_signers must be at least 2");
         }

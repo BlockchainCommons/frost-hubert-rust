@@ -1,8 +1,8 @@
+use anyhow::{Error, Result, bail};
 use bc_envelope::prelude::*;
-use anyhow::{Result, bail, Error};
 
 pub enum DkgParticipantStatus {
-    Pending, // Participant has been invited but has not yet responded
+    Pending,  // Participant has been invited but has not yet responded
     Accepted, // Participant has accepted the invite
     Declined, // Participant has declined the invite
 }
@@ -41,6 +41,7 @@ impl TryFrom<Envelope> for DkgParticipantStatus {
 
     fn try_from(envelope: Envelope) -> bc_envelope::Result<Self> {
         let str: String = envelope.subject().try_into()?;
-        DkgParticipantStatus::try_from(str).map_err(|e| bc_envelope::Error::msg(e.to_string()))
+        DkgParticipantStatus::try_from(str)
+            .map_err(|e| bc_envelope::Error::msg(e.to_string()))
     }
 }
