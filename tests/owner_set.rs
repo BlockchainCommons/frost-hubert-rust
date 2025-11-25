@@ -37,6 +37,7 @@ fn owner_set_with_participant_add_persists_both() {
     let path = registry_file(temp.path());
     let content = fs::read_to_string(path).unwrap();
     let expected = json!({
+        "groups": {},
         "owner": {
             "xid_document": owner_ur
         },

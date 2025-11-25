@@ -1,13 +1,13 @@
 use std::{collections::BTreeMap, fs, path::Path};
 
 use anyhow::{Context, Result, bail};
-use bc_components::XID;
+use bc_components::{ARID, XID};
 use bc_envelope::prelude::{URDecodable, UREncodable};
 use serde::{
     Deserialize, Deserializer, Serialize, Serializer, ser::SerializeMap,
 };
 
-use super::{OwnerRecord, ParticipantRecord};
+use super::{GroupRecord, OwnerRecord, ParticipantRecord};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Registry {
@@ -15,6 +15,8 @@ pub struct Registry {
     owner: Option<OwnerRecord>,
     #[serde(default, with = "serde_participants_map")]
     participants: BTreeMap<XID, ParticipantRecord>,
+    #[serde(default)]
+    groups: BTreeMap<String, GroupRecord>,
 }
 
 impl Registry {
@@ -133,6 +135,64 @@ impl Registry {
             .iter()
             .find(|(_, record)| record.pet_name() == Some(pet_name))
     }
+
+    pub fn group(&self, group_id: &ARID) -> Option<&GroupRecord> {
+        self.groups.get(&group_key(group_id))
+    }
+
+    pub fn group_mut(&mut self, group_id: &ARID) -> Option<&mut GroupRecord> {
+        self.groups.get_mut(&group_key(group_id))
+    }
+
+    pub fn record_group(
+        &mut self,
+        group_id: ARID,
+        record: GroupRecord,
+    ) -> Result<GroupOutcome> {
+        let key = group_key(&group_id);
+        match self.groups.get(&key) {
+            Some(existing) => {
+                if !existing.config_matches(&record) {
+                    bail!(
+                        "Group {} already exists with a different configuration",
+                        group_id.hex()
+                    );
+                }
+                let mut merged = existing.clone();
+                merged.set_status(record.status().clone());
+                merged.update_response_arid(record.response_arid());
+                merged.update_request_id(record.request_id());
+
+                let mut contributions = merged.contributions().clone();
+                let updates = record.contributions();
+                if updates.round1_secret.is_some() {
+                    contributions.round1_secret = updates.round1_secret.clone();
+                }
+                if updates.round1_package.is_some() {
+                    contributions.round1_package =
+                        updates.round1_package.clone();
+                }
+                if updates.round2_secret.is_some() {
+                    contributions.round2_secret = updates.round2_secret.clone();
+                }
+                if updates.key_package.is_some() {
+                    contributions.key_package = updates.key_package.clone();
+                }
+                merged.set_contributions(contributions);
+
+                if let Some(arid) = record.next_response_arid() {
+                    merged.set_next_response_arid(arid);
+                }
+
+                self.groups.insert(key, merged);
+                Ok(GroupOutcome::Updated)
+            }
+            None => {
+                self.groups.insert(key, record);
+                Ok(GroupOutcome::Inserted)
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -146,6 +206,14 @@ pub enum OwnerOutcome {
     Inserted,
     AlreadyPresent,
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GroupOutcome {
+    Inserted,
+    Updated,
+}
+
+fn group_key(group_id: &ARID) -> String { group_id.hex() }
 
 mod serde_participants_map {
     use super::*;

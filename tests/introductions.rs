@@ -128,6 +128,7 @@ fn expected_registry_text(owner_name: &str) -> String {
     match owner_name {
         "Alice" => indoc! {r#"
             {
+              "groups": {},
               "owner": {
                 "xid_document": "ur:xid/tpsplftpsotanshdhdcxwmkbiywnmkwdlprdjliowtdkprkpbszodnlychyklapdjzrohnwpwecefglolsbsoyaylrtpsotansgylftanshfhdcxswkeatmoclaehlpezsprtkntgrparfihgosofmfnlrgltndysabkwlckykimemottansgrhdcxtnhluevohylpdadednfmrsdkcfvovdsfaaadpecllftytbhgmylapkbarsfhdthsoycsfncsfgoycscstpsoihfpjziniaihlfoycsfptpsotansgtlftansgohdcxgrftdienhfprgtbsjlgmtefzfmhpvtlyqzglcxrstaeegdstlncwwtfhwkdwkbehtansgehdcxctzmfyqzrkcpjpbslrmeiymovtktbkdllynbztspryolfhjpbzrdmeghwdehkekpoybstpsotansgmhdcxbagdkturtovtaxryolhgonbblygahdsbwejyhspfbgtbspssmwroghhknyhlzcyafzpkftwy"
               },
@@ -151,6 +152,7 @@ fn expected_registry_text(owner_name: &str) -> String {
         .to_string(),
         "Bob" => indoc! {r#"
             {
+              "groups": {},
               "owner": {
                 "xid_document": "ur:xid/tpsplftpsotanshdhdcxuysflgfsmwjseozmhplehywpwdcnfwmtvskkkbtieerpsfmtwegoiysaeeylfsecoyaylrtpsotansgylftanshfhdcxtoiniabgotbtltwpfgnbcxlybznngywkfsflbabyamadwmuefgtyjecxmteefxjntansgrhdcxbatpyafttpyabewkcmutihvesklrhytehydavdimwpahbalnnsrsnyfzpkcehpfhoycsfncsfglfoycsfptpsotansgtlftansgohdcxmdfskpescejtfyjozttezsbsbwbtmochadnscpadcwnnfejlqzjomwpskieyrendtansgehdcxdwbalolkwlhfhfvewnbbtshdbbiswdreldadwleynbfrwdgsbgjlgthfhktdrykooybstpsotansgmhdcxbsadwtqzdkvefnpesfasgsuoiocavonbieimfhtpkkpslbkbkkoscyidlfnscygdoycscstpsoiafwjlidclptjzwz"
               },
@@ -174,6 +176,7 @@ fn expected_registry_text(owner_name: &str) -> String {
         .to_string(),
         "Carol" => indoc! {r#"
             {
+              "groups": {},
               "owner": {
                 "xid_document": "ur:xid/tpsplftpsotanshdhdcxnemtgmchkkuewflyoycydstepepecfoxwyeoiszourtayketgutkhnoednceeydkoyaylrtpsotansgylftanshfhdcxkkplksiykkynfeisiedkserfbdollodikgprmsihaeuoveehytcsjzmkahwycxestansgrhdcxfgbbinheylcmhlsomhrsvddmisvehhgywttnwlwniojecerettfeuyjylnlybsbtlfoycsfptpsotansgtlftansgohdcxhpnnvtrooespntdrcnylluvwimbbamfzswaatifrvspyqdjyjooltacaasdthedrtansgehdcxrprtadaacyhtsgfglfwefhjzcmlapdasndgwfgnlvtaeuecwaezsclrpwfgmiyfloybstpsotansgmhdcxpdrevoptstsgjsbzoybwmelgwnhdcscaesnblapacfuolsdysfykflihjolbzovwoycsfncsfgoycscstpsoihfxhsjpjljzgljeqzfl"
               },
@@ -197,6 +200,7 @@ fn expected_registry_text(owner_name: &str) -> String {
         .to_string(),
         "Dan" => indoc! {r#"
             {
+              "groups": {},
               "owner": {
                 "xid_document": "ur:xid/tpsplftpsotanshdhdcxptfslorobgsgbyltdeoxbniysoktlffllkdtkovadicljpbahhenemhtbsmslarooyaylrtpsotansgylftanshfhdcxsaspkbhlmukgpfwemofgiadppkpsihrphecafxgahnbgfljnptluhdwzfdvacswftansgrhdcxldgtiadwmnvslaaxgufysnlfneghfgurfsiaaysbhkcadmaavwlkfytdwdzmkteeoycsfncsfglfoycsfptpsotansgtlftansgohdcxltmtiegwiddrbnvebzbkfzmholaadyvdkobdrlfswtlefyfrrhjzjpjoneetskjytansgehdcxurdshedtbtueldbszetsayhntnsnsgetcapscalpztgmcpinfppytizsprmevtfloybstpsotansgmhdcxsgylchiyotiamhkeftdafdvochskhpknembttoecbglbmyutytwtoxrpswhsdpuyoycscstpsoiafyhsjtgewthkps"
               },

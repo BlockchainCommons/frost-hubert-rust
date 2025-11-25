@@ -83,7 +83,7 @@ fn test_dkg_group_invite() {
     let participants = vec![alice_ur, bob_ur, carol_ur];
 
     let request_id = make_arid(&mut rng);
-    let session_id = make_arid(&mut rng);
+    let group_id = make_arid(&mut rng);
     let expiry = date + Duration::from_secs(7 * 24 * 60 * 60);
     let alice_response_arid = make_arid(&mut rng);
     let bob_response_arid = make_arid(&mut rng);
@@ -93,7 +93,7 @@ fn test_dkg_group_invite() {
     let invite = DkgGroupInvite::new(
         request_id,
         coordinator.clone(),
-        session_id,
+        group_id,
         date,
         expiry,
         min_signers,
@@ -108,6 +108,7 @@ fn test_dkg_group_invite() {
         request(ARID(bbc88f5e)) [
             'body': «"dkgGroupInvite"» [
                 ❰"charter"❱: "Test charter"
+                ❰"group"❱: ARID(b2c49e75)
                 ❰"minSigners"❱: 2
                 ❰"participant"❱: {
                     {
@@ -157,7 +158,6 @@ fn test_dkg_group_invite() {
                         'hasRecipient': SealedMessage
                     ]
                 ]
-                ❰"session"❱: ARID(b2c49e75)
                 ❰"validUntil"❱: 2026-01-07
             ]
             'date': 2025-12-31
@@ -196,7 +196,7 @@ fn test_dkg_group_invite() {
     assert!(alice_invite.peer_continuation().is_some());
     assert_eq!(alice_invite.min_signers(), min_signers);
     assert_eq!(alice_invite.charter(), charter);
-    assert_eq!(alice_invite.session_id(), session_id);
+    assert_eq!(alice_invite.group_id(), group_id);
 
     let success_response =
         alice_invite.to_response(DkgInvitationResult::Accepted, &alice);

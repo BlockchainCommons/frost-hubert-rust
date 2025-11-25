@@ -1,4 +1,9 @@
-use std::{collections::HashSet, time::Duration};
+use std::{
+    collections::HashSet,
+    fs,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
 use anyhow::{Context, Result, bail};
 use bc_components::{ARID, XID, XIDProvider};
@@ -6,7 +11,12 @@ use bc_envelope::prelude::*;
 use bc_ur::prelude::UR;
 use bc_xid::{XIDDocument, XIDVerifySignature};
 use clap::{Parser, Subcommand};
-use gstp::{SealedRequest, SealedRequestBehavior};
+use frost_ed25519::{self as frost, Identifier};
+use gstp::{
+    SealedRequest, SealedRequestBehavior, SealedResponse,
+    SealedResponseBehavior,
+};
+use rand_core::OsRng;
 use tokio::runtime::Runtime;
 
 use crate::{
@@ -15,7 +25,10 @@ use crate::{
         registry::participants_file_path,
         storage::{StorageClient, StorageSelector},
     },
-    registry::{ParticipantRecord, Registry},
+    registry::{
+        ContributionPaths, GroupParticipant, GroupRecord, GroupStatus,
+        OwnerRecord, ParticipantRecord, Registry,
+    },
 };
 
 #[derive(Debug, Parser)]
@@ -42,6 +55,208 @@ impl CommandArgs {
 
 #[derive(Debug, Parser)]
 #[doc(hidden)]
+pub struct InviteRespondArgs {
+    #[command(flatten)]
+    storage: StorageSelector,
+
+    /// Optional registry path or filename override
+    #[arg(long = "registry", value_name = "PATH")]
+    registry: Option<String>,
+
+    /// Wait up to this many seconds for the invite to appear
+    #[arg(long = "timeout", value_name = "SECONDS")]
+    timeout: Option<u64>,
+
+    /// Optional pre-fetched invite envelope (ur:envelope); skips Hubert retrieval when present
+    #[arg(long = "envelope", value_name = "UR:ENVELOPE")]
+    envelope: Option<String>,
+
+    /// Optional ARID to use for the next response in the exchange; defaults to a new random ARID
+    #[arg(long = "response-arid", value_name = "UR:ARID")]
+    response_arid: Option<String>,
+
+    /// Do not send the response to Hubert; still performs validation and state updates
+    #[arg(long = "no-send")]
+    no_send: bool,
+
+    /// Print the response envelope UR
+    #[arg(long = "print-envelope")]
+    print_envelope: bool,
+
+    /// Reject the invite with the provided reason (accepts by default)
+    #[arg(long = "reject", value_name = "REASON")]
+    reject_reason: Option<String>,
+
+    /// ARID for the sealed invite (ur:arid)
+    #[arg(value_name = "UR:ARID")]
+    arid: String,
+
+    /// Expected sender of the invite (ur:xid or pet name in registry)
+    #[arg(value_name = "SENDER")]
+    sender: String,
+}
+
+impl InviteRespondArgs {
+    pub fn exec(self) -> Result<()> {
+        let selection = self.storage.resolve()?;
+        let registry_path = participants_file_path(self.registry.clone())?;
+        let mut registry = Registry::load(&registry_path).with_context(|| {
+            format!("Failed to load registry at {}", registry_path.display())
+        })?;
+        let owner = registry
+            .owner()
+            .context("Registry owner with private keys is required")?
+            .clone();
+        let expected_sender = resolve_sender(&registry, self.sender.as_str())?;
+        let invite_arid = parse_arid_ur(&self.arid)?;
+        let next_response_arid = match &self.response_arid {
+            Some(raw) => parse_arid_ur(raw)?,
+            None => ARID::new(),
+        };
+        let envelope_override = self.envelope.clone();
+        let timeout = self.timeout;
+        let reject_reason = self.reject_reason.clone();
+        let should_print = self.print_envelope || self.no_send;
+        let should_send = !self.no_send;
+        let registry_path_for_state = registry_path.clone();
+
+        let runtime = Runtime::new()?;
+        runtime.block_on(async move {
+            let client = StorageClient::from_selection(selection).await?;
+            let invite_envelope = if let Some(raw) = envelope_override {
+                parse_envelope_ur(&raw)?
+            } else {
+                client
+                    .get(&invite_arid, timeout)
+                    .await?
+                    .context("Invite not found in Hubert storage")?
+            };
+
+            let now = Date::now();
+            let details = decode_invite_details(
+                invite_envelope,
+                now,
+                expected_sender,
+                owner.xid_document(),
+            )?;
+
+            let mut sorted_participants = details.participants.clone();
+            sorted_participants.sort_by_key(|doc| doc.xid());
+            let owner_index = sorted_participants
+                .iter()
+                .position(|doc| doc.xid() == owner.xid())
+                .context("Invite does not include the registry owner")?;
+            let identifier_index =
+                u16::try_from(owner_index + 1).context("Too many participants for identifiers")?;
+            let identifier = Identifier::try_from(identifier_index)?;
+            let total = u16::try_from(sorted_participants.len())
+                .context("Too many participants for FROST identifiers")?;
+            let min_signers = u16::try_from(details.invitation.min_signers())
+                .context("min_signers does not fit into identifier space")?;
+
+            let group_participants = build_group_participants(
+                &registry,
+                &owner,
+                &sorted_participants,
+            )?;
+            let coordinator = group_participant_from_registry(
+                &registry,
+                &owner,
+                &details.invitation.sender(),
+            )?;
+
+            let mut contributions = ContributionPaths::default();
+            let mut response_body = build_response_body(
+                details.invitation.group_id(),
+                owner.xid(),
+                identifier_index,
+                next_response_arid,
+                None,
+            )?;
+
+            if reject_reason.is_none() {
+                let (round1_secret, round1_package) =
+                    frost::keys::dkg::part1(identifier, total, min_signers, OsRng)?;
+                contributions = persist_round1_state(
+                    &registry_path_for_state,
+                    &details.invitation.group_id(),
+                    &round1_secret,
+                    &round1_package,
+                )?;
+                response_body = build_response_body(
+                    details.invitation.group_id(),
+                    owner.xid(),
+                    identifier_index,
+                    next_response_arid,
+                    Some(&round1_package),
+                )?;
+            }
+
+            let status = match &reject_reason {
+                Some(reason) => GroupStatus::Rejected { reason: Some(reason.clone()) },
+                None => GroupStatus::Accepted,
+            };
+            let mut group_record = GroupRecord::new(
+                details.invitation.charter().to_owned(),
+                details.invitation.min_signers(),
+                coordinator,
+                group_participants,
+                details.invitation.request_id(),
+                details.invitation.response_arid(),
+                status.clone(),
+            );
+            group_record.set_contributions(contributions);
+            group_record.set_next_response_arid(next_response_arid);
+            registry.record_group(details.invitation.group_id(), group_record)?;
+            registry.save(&registry_path_for_state)?;
+
+            let signer_private_keys = owner
+                .xid_document()
+                .inception_private_keys()
+                .context("Owner XID document has no signing keys")?;
+            let mut sealed = if let Some(reason) = reject_reason {
+                let error_body = Envelope::new("dkgInviteReject")
+                    .add_assertion("group", details.invitation.group_id())
+                    .add_assertion("response_arid", next_response_arid)
+                    .add_assertion("reason", reason.clone());
+                SealedResponse::new_failure(
+                    details.invitation.request_id(),
+                    owner.xid_document().clone(),
+                )
+                .with_error(error_body)
+            } else {
+                SealedResponse::new_success(
+                    details.invitation.request_id(),
+                    owner.xid_document().clone(),
+                )
+                .with_result(response_body.clone())
+                .with_state(next_response_arid)
+            };
+            sealed =
+                sealed.with_peer_continuation(details.invitation.peer_continuation());
+
+            let response_envelope = sealed.to_envelope(
+                Some(details.invitation.valid_until()),
+                Some(signer_private_keys),
+                Some(&details.invitation.sender()),
+            )?;
+
+            if should_print {
+                println!("{}", response_envelope.ur_string());
+            }
+
+            if should_send {
+                client.put(&details.invitation.response_arid(), &response_envelope).await?;
+            }
+
+            println!("Response ARID: {}", next_response_arid.ur_string());
+            Ok(())
+        })
+    }
+}
+
+#[derive(Debug, Parser)]
+#[doc(hidden)]
 pub struct InviteArgs {
     #[command(subcommand)]
     command: InviteCommands,
@@ -56,6 +271,8 @@ enum InviteCommands {
     Send(InvitePutArgs),
     /// Retrieve and inspect a sealed DKG invite from Hubert
     View(InviteViewArgs),
+    /// Respond to a DKG invite
+    Respond(InviteRespondArgs),
 }
 
 impl InviteArgs {
@@ -64,6 +281,7 @@ impl InviteArgs {
             InviteCommands::Compose(args) => args.exec(),
             InviteCommands::Send(args) => args.exec(),
             InviteCommands::View(args) => args.exec(),
+            InviteCommands::Respond(args) => args.exec(),
         }
     }
 }
@@ -83,7 +301,7 @@ pub struct InviteShowArgs {
     #[arg(long = "min-signers", value_name = "N")]
     min_signers: Option<usize>,
 
-    /// Charter statement for the DKG session
+    /// Charter statement for the DKG group
     #[arg(long = "charter", value_name = "STRING", default_value = "")]
     charter: String,
 
@@ -127,7 +345,7 @@ pub struct InvitePutArgs {
     #[arg(long = "min-signers", value_name = "N")]
     min_signers: Option<usize>,
 
-    /// Charter statement for the DKG session
+    /// Charter statement for the DKG group
     #[arg(long = "charter", value_name = "STRING", default_value = "")]
     charter: String,
 
@@ -398,7 +616,7 @@ fn decode_invite_details(
         .extract_object_for_parameter::<String>("charter")?;
     sealed_request
         .request()
-        .extract_object_for_parameter::<ARID>("session")?;
+        .extract_object_for_parameter::<ARID>("group")?;
     let participant_objects = sealed_request
         .request()
         .objects_for_parameter("participant");
@@ -518,6 +736,100 @@ fn resolve_sender_name(
             .unwrap_or_else(|| record.xid().ur_string());
         format_name_with_owner_marker(name, false)
     })
+}
+
+fn build_group_participants(
+    registry: &Registry,
+    owner: &OwnerRecord,
+    participants: &[XIDDocument],
+) -> Result<Vec<GroupParticipant>> {
+    participants
+        .iter()
+        .map(|doc| group_participant_from_registry(registry, owner, doc))
+        .collect()
+}
+
+fn group_participant_from_registry(
+    registry: &Registry,
+    owner: &OwnerRecord,
+    document: &XIDDocument,
+) -> Result<GroupParticipant> {
+    let xid = document.xid();
+    if xid == owner.xid() {
+        return Ok(GroupParticipant::new(
+            xid,
+            owner.pet_name().map(|s| s.to_owned()),
+        ));
+    }
+    let record = registry.participant(&xid).ok_or_else(|| {
+        anyhow::anyhow!(
+            "Invite participant not found in registry: {}",
+            xid.ur_string()
+        )
+    })?;
+    Ok(GroupParticipant::new(
+        xid,
+        record.pet_name().map(|s| s.to_owned()),
+    ))
+}
+
+fn build_response_body(
+    group_id: ARID,
+    participant: XID,
+    identifier_index: u16,
+    response_arid: ARID,
+    round1_package: Option<&frost::keys::dkg::round1::Package>,
+) -> Result<Envelope> {
+    let mut envelope = Envelope::new("dkgInviteResponse")
+        .add_assertion("group", group_id)
+        .add_assertion("participant", participant)
+        .add_assertion("identifier", u64::from(identifier_index))
+        .add_assertion("response_arid", response_arid);
+    if let Some(package) = round1_package {
+        let encoded = serde_json::to_vec(package)?;
+        envelope = envelope.add_assertion(
+            "round1_package",
+            CBOR::from(encoded.as_slice()),
+        );
+    }
+    Ok(envelope)
+}
+
+fn persist_round1_state(
+    registry_path: &Path,
+    group_id: &ARID,
+    round1_secret: &frost::keys::dkg::round1::SecretPackage,
+    round1_package: &frost::keys::dkg::round1::Package,
+) -> Result<ContributionPaths> {
+    let dir = group_state_dir(registry_path, group_id);
+    fs::create_dir_all(&dir).with_context(|| {
+        format!("Failed to create group state directory {}", dir.display())
+    })?;
+    let secret_path = dir.join("round1_secret.json");
+    let package_path = dir.join("round1_package.json");
+    fs::write(&secret_path, serde_json::to_vec_pretty(round1_secret)?)
+        .with_context(|| {
+            format!("Failed to write {}", secret_path.display())
+        })?;
+    fs::write(&package_path, serde_json::to_vec_pretty(round1_package)?)
+        .with_context(|| {
+            format!("Failed to write {}", package_path.display())
+        })?;
+
+    Ok(ContributionPaths {
+        round1_secret: Some(secret_path.to_string_lossy().into_owned()),
+        round1_package: Some(package_path.to_string_lossy().into_owned()),
+        round2_secret: None,
+        key_package: None,
+    })
+}
+
+fn group_state_dir(registry_path: &Path, group_id: &ARID) -> PathBuf {
+    let base = registry_path
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."));
+    base.join("group-state").join(group_id.hex())
 }
 
 #[allow(dead_code)]

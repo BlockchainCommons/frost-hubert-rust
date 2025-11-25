@@ -16,15 +16,15 @@ pub struct DkgGroupInvite {
     request_id: ARID,
     // XID document of the sender
     sender: XIDDocument,
-    // Identifies the DKG session
-    session_id: ARID,
+    // Identifies the DKG group
+    group_id: ARID,
     // Date the invite was sent
     date: Date,
     // Expiration date of the invite
     valid_until: Date,
-    // Minimum signers required for the DKG session
+    // Minimum signers required for the DKG group
     min_signers: usize,
-    // Charter statement for the DKG session (may be empty)
+    // Charter statement for the DKG group (may be empty)
     charter: String,
     // Identifies participants and their indexes
     ordered_participants: Vec<DkGProposedParticipant>,
@@ -35,7 +35,7 @@ impl DkgGroupInvite {
     pub fn new(
         request_id: ARID,
         sender: XIDDocument,
-        session_id: ARID,
+        group_id: ARID,
         date: Date,
         valid_until: Date,
         min_signers: usize,
@@ -67,7 +67,7 @@ impl DkgGroupInvite {
         Ok(Self {
             request_id,
             sender,
-            session_id,
+            group_id,
             date,
             valid_until,
             min_signers,
@@ -80,7 +80,7 @@ impl DkgGroupInvite {
 
     pub fn sender(&self) -> XIDDocument { self.sender.clone() }
 
-    pub fn session_id(&self) -> ARID { self.session_id }
+    pub fn group_id(&self) -> ARID { self.group_id }
 
     pub fn date(&self) -> Date { self.date }
 
@@ -100,7 +100,7 @@ impl DkgGroupInvite {
             self.request_id(),
             self.sender(),
         )
-        .with_parameter("session", self.session_id())
+        .with_parameter("group", self.group_id())
         .with_parameter("minSigners", self.min_signers as u64)
         .with_parameter("charter", self.charter.clone())
         .with_date(self.date())
@@ -166,7 +166,7 @@ pub struct DkgInvitation {
                           * to sender */
     min_signers: usize, // Minimum signers required
     charter: String,    // Charter text (may be empty)
-    session_id: ARID,   // Identifier for the DKG session
+    group_id: ARID,     // Identifier for the DKG group
 }
 
 impl DkgInvitation {
@@ -186,7 +186,7 @@ impl DkgInvitation {
 
     pub fn charter(&self) -> &str { &self.charter }
 
-    pub fn session_id(&self) -> ARID { self.session_id }
+    pub fn group_id(&self) -> ARID { self.group_id }
 
     /// Build a GSTP response for this invitation result.
     pub fn to_response(
@@ -280,9 +280,8 @@ impl DkgInvitation {
         let charter: String = sealed_request
             .request()
             .extract_object_for_parameter("charter")?;
-        let session_id: ARID = sealed_request
-            .request()
-            .extract_object_for_parameter("session")?;
+        let group_id: ARID =
+            sealed_request.request().extract_object_for_parameter("group")?;
         let participant_objects = sealed_request
             .request()
             .objects_for_parameter("participant");
@@ -320,7 +319,7 @@ impl DkgInvitation {
                 peer_continuation: sealed_request.peer_continuation().cloned(),
                 min_signers,
                 charter,
-                session_id,
+                group_id,
             });
         }
 
