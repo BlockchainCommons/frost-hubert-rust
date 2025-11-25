@@ -530,6 +530,34 @@ frost dkg invite view --info --no-envelope --storage server --registry {qp(REGIS
             ),
         )
 
+        run_step(
+            shell,
+            "Bob responds to the invite (viewing his response envelope)",
+            f"""
+BOB_RESPONSE_OUTPUT=$(frost dkg invite respond --storage server --print-envelope --registry {qp(REGISTRIES["bob"])} --envelope "${{BOB_INVITE}}" "${{ALICE_INVITE_ARID}}" Alice)
+BOB_RESPONSE_ENVELOPE=$(echo "${{BOB_RESPONSE_OUTPUT}}" | sed -n '1p')
+BOB_RESPONSE_ARID=$(echo "${{BOB_RESPONSE_OUTPUT}}" | sed -n '2p' | awk '{{print $3}}')
+echo "Response ARID: $BOB_RESPONSE_ARID"
+echo "${{BOB_RESPONSE_ENVELOPE}}" | envelope format
+""",
+            commentary=(
+                "Bob accepts the invite using his registry and cached invite envelope, posting his response to Hubert. "
+                "Capture and format his response envelope to inspect the GSTP response and continuation details."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Carol and Dan respond to the invite",
+            f"""
+frost dkg invite respond --storage server --registry {qp(REGISTRIES["carol"])} "${{ALICE_INVITE_ARID}}" Alice
+frost dkg invite respond --storage server --registry {qp(REGISTRIES["dan"])} "${{ALICE_INVITE_ARID}}" Alice
+""",
+            commentary=(
+                "Carol and Dan accept the invite from Hubert using their registries, posting their responses to Hubert."
+            ),
+        )
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
