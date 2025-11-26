@@ -1,6 +1,7 @@
 mod common;
 pub mod invite;
 pub mod round1;
+pub mod round2;
 
 use anyhow::Result;
 use clap::{Args, Subcommand};
@@ -19,6 +20,8 @@ enum Commands {
     Invite(invite::CommandArgs),
     /// DKG Round 1 operations
     Round1(round1::CommandArgs),
+    /// DKG Round 2 operations
+    Round2(round2::CommandArgs),
 }
 
 impl CommandArgs {
@@ -26,6 +29,7 @@ impl CommandArgs {
         match self.command {
             Commands::Invite(args) => args.exec(),
             Commands::Round1(args) => args.exec(),
+            Commands::Round2(args) => args.exec(),
         }
     }
 }

@@ -14,80 +14,81 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
    - `receive`: Participants fetch and decrypt invites from Hubert or local envelope
    - `respond`: Participants accept or reject, posting response to Hubert
 
-3. **Storage Backends**
+3. **DKG Round 1** (`frost dkg round1`)
+   - `collect`: Coordinator fetches all participant responses from Hubert, validates GSTP responses, extracts Round 1 packages, saves to `collected_round1.json`
+
+4. **DKG Round 2** (`frost dkg round2`)
+   - `send`: Coordinator sends individual sealed messages to each participant containing all Round 1 packages and their unique response ARID (posts to ARIDs participants specified in their invite responses)
+
+5. **Storage Backends**
    - Hubert server (HTTP)
    - Mainline DHT
    - IPFS
    - Hybrid (DHT + IPFS)
 
-4. **Demo Script** (`frost-demo.py`)
-   - Provisions 4 participants (Alice, Bob, Carol, Dan)
+6. **Demo Script** (`frost-demo.py`)
+   - Provisions 4 participants (Alice, Bob, Carol, Dan) in separate directories
    - Builds registries
    - Creates and responds to DKG invites via Hubert
+   - Coordinator collects Round 1 packages
+   - Coordinator sends Round 2 request
 
 ## Where the Demo Stops
 
-The `demo-log.md` ends after all participants respond to the invite. The DKG Round 1 packages are generated and persisted locally (`group-state/<group-id>/round1_secret.json`, `round1_package.json`), but the protocol is incomplete.
+The `demo-log.md` ends after the coordinator (Alice) sends the Round 2 request to Hubert. Each participant has their own directory with:
+- `registry.json` - Their registry with group membership and pending_requests (Round 2)
+- `group-state/<group-id>/round1_secret.json` - Their Round 1 secret (participants only)
+- `group-state/<group-id>/round1_package.json` - Their Round 1 package (participants only)
+- `group-state/<group-id>/collected_round1.json` - All Round 1 packages (coordinator only)
 
 ## Next Steps (Priority Order)
 
-### 1. Coordinator Collects Round 1 Packages
-
-**Command:** `frost dkg round1 collect`
-
-The coordinator (Alice) needs to:
-- Fetch all participant responses from Hubert using their assigned response ARIDs
-- Validate each response (GSTP response, signature, group membership)
-- Extract Round 1 packages from successful responses
-- Store the collected packages locally
-
-**Why first:** Without collecting Round 1, the coordinator cannot proceed to Round 2.
-
-### 2. Coordinator Sends Round 2 Requests
-
-**Command:** `frost dkg round2 send`
-
-The coordinator:
-- Constructs Round 2 messages for each participant pair
-- Creates a new GSTP request with all Round 1 packages
-- Seals and sends to Hubert with per-participant encrypted response ARIDs
-
-### 3. Participants Complete Round 2
+### 1. Participants Complete Round 2
 
 **Command:** `frost dkg round2 respond`
 
 Each participant:
-- Fetches Round 2 request
+- Fetches Round 2 request from Hubert
 - Runs `frost_ed25519::keys::dkg::part2` with their Round 1 secret and all Round 1 packages
 - Generates Round 2 packages (one per other participant)
 - Persists `round2_secret.json`
 - Posts encrypted Round 2 packages back to coordinator
 
-### 4. Coordinator Collects and Distributes Round 2
+### 2. Coordinator Collects Round 2
 
-**Command:** `frost dkg round2 collect` and `frost dkg finalize send`
+**Command:** `frost dkg round2 collect`
 
 The coordinator:
-- Collects all Round 2 packages
+- Fetches all Round 2 responses from Hubert
+- Validates each response
+- Saves collected Round 2 packages to `collected_round2.json`
+
+### 3. Coordinator Distributes Round 2 Packages
+
+**Command:** `frost dkg finalize send`
+
+The coordinator:
 - Redistributes each participant's incoming Round 2 packages to them
+- Each participant receives only the packages destined for them
 
-### 5. Participants Finalize Key Generation
+### 4. Participants Finalize Key Generation
 
-**Command:** `frost dkg finalize`
+**Command:** `frost dkg finalize respond`
 
 Each participant:
+- Fetches their incoming Round 2 packages
 - Runs `frost_ed25519::keys::dkg::part3` with their Round 2 secret and incoming packages
 - Produces `KeyPackage` and `PublicKeyPackage`
 - Stores `key_package.json`
-- Updates group status to `Complete`
+- Posts confirmation to coordinator
 
-### 6. Group Status and Listing
+### 5. Group Status and Listing
 
 **Commands:**
 - `frost group list` - List all groups in registry with status
 - `frost group info <GROUP_ID>` - Show group details, participants, coordinator, signing threshold
 
-### 7. Threshold Signing
+### 6. Threshold Signing
 
 Once key generation is complete:
 - `frost sign start` - Coordinator initiates signing session
@@ -109,6 +110,13 @@ pub struct ContributionPaths {
 }
 ```
 
+The `PendingRequests` structure tracks response ARIDs:
+```rust
+pub struct PendingRequests {
+    requests: Vec<PendingRequest>,  // Maps participant XID to response ARID
+}
+```
+
 ### GSTP Flow
 
 The pattern is established:
@@ -120,7 +128,6 @@ The pattern is established:
 ### Test Coverage
 
 Add integration tests for:
-- Round 1 collection from Hubert
 - Round 2 message construction and distribution
 - Key package generation
 - End-to-end signing flow

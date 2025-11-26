@@ -15,7 +15,7 @@ use tokio::runtime::Runtime;
 use super::super::common::{OptionalStorageSelector, parse_arid_ur};
 use crate::{
     cmd::{registry::participants_file_path, storage::StorageClient},
-    registry::Registry,
+    registry::{PendingRequests, Registry},
 };
 
 /// Collect Round 1 responses from all participants (coordinator only).
@@ -89,6 +89,7 @@ impl CommandArgs {
 
         let mut round1_packages: Vec<(XID, frost::keys::dkg::round1::Package)> =
             Vec::new();
+        let mut next_response_arids: Vec<(XID, ARID)> = Vec::new();
         let mut errors: Vec<(XID, String)> = Vec::new();
 
         let runtime = Runtime::new()?;
@@ -116,9 +117,10 @@ impl CommandArgs {
                 owner.xid_document(),
                 &group_id,
             ) {
-                Ok(package) => {
+                Ok((package, next_arid)) => {
                     eprintln!("ok");
                     round1_packages.push((*participant_xid, package));
+                    next_response_arids.push((*participant_xid, next_arid));
                 }
                 Err(e) => {
                     eprintln!("error: {}", e);
@@ -165,11 +167,17 @@ impl CommandArgs {
             format!("Failed to write {}", round1_packages_path.display())
         })?;
 
-        // Clear pending_requests since we've collected all responses
+        // Update pending_requests with the ARIDs participants gave us for Round
+        // 2 (These are the request ARIDs where we should post Round 2
+        // requests)
+        let mut new_pending = PendingRequests::new();
+        for (xid, next_arid) in &next_response_arids {
+            new_pending.add(*xid, *next_arid);
+        }
         let group_record = registry
             .group_mut(&group_id)
             .context("Group not found in registry")?;
-        group_record.clear_pending_requests();
+        group_record.set_pending_requests(new_pending);
         registry.save(&registry_path)?;
 
         // Display relative path from current directory if possible
@@ -197,7 +205,7 @@ fn fetch_and_validate_response(
     timeout: Option<u64>,
     coordinator: &XIDDocument,
     expected_group_id: &ARID,
-) -> Result<frost::keys::dkg::round1::Package> {
+) -> Result<(frost::keys::dkg::round1::Package, ARID)> {
     // Fetch from Hubert
     let envelope = runtime.block_on(async {
         client
@@ -252,6 +260,10 @@ fn fetch_and_validate_response(
         );
     }
 
+    // Extract the participant's next response ARID (where they want Round 2)
+    let next_response_arid: ARID =
+        result.extract_object_for_predicate("response_arid")?;
+
     // Extract round1_package as an envelope wrapping the byte string
     let round1_envelope: Envelope =
         result.object_for_predicate("round1_package")?;
@@ -264,7 +276,7 @@ fn fetch_and_validate_response(
         serde_json::from_slice(&round1_bytes)
             .context("Failed to deserialize Round 1 package")?;
 
-    Ok(round1_package)
+    Ok((round1_package, next_response_arid))
 }
 
 fn group_state_dir(registry_path: &Path, group_id: &ARID) -> PathBuf {

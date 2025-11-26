@@ -53,7 +53,8 @@ impl ContributionPaths {
 }
 
 /// Tracks pending responses expected from participants (coordinator-side).
-/// Maps participant XID to the ARID where their response should be posted.
+/// Maps participant XID to the ARIDs for request (where they fetch) and
+/// response (where they post).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct PendingRequests {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -64,6 +65,15 @@ pub struct PendingRequests {
 struct PendingRequest {
     #[serde(with = "super::group_record::serde_xid")]
     participant: XID,
+    /// Where the coordinator posts the request (participant fetches from here)
+    #[serde(
+        default,
+        with = "serde_option_arid",
+        skip_serializing_if = "Option::is_none"
+    )]
+    request_arid: Option<bc_components::ARID>,
+    /// Where the participant posts their response (coordinator fetches from
+    /// here)
     #[serde(with = "serde_arid")]
     response_arid: bc_components::ARID,
 }
@@ -76,8 +86,24 @@ impl PendingRequests {
         participant: XID,
         response_arid: bc_components::ARID,
     ) {
-        self.requests
-            .push(PendingRequest { participant, response_arid });
+        self.requests.push(PendingRequest {
+            participant,
+            request_arid: None,
+            response_arid,
+        });
+    }
+
+    pub fn add_with_request(
+        &mut self,
+        participant: XID,
+        request_arid: bc_components::ARID,
+        response_arid: bc_components::ARID,
+    ) {
+        self.requests.push(PendingRequest {
+            participant,
+            request_arid: Some(request_arid),
+            response_arid,
+        });
     }
 
     pub fn is_empty(&self) -> bool { self.requests.is_empty() }
@@ -86,6 +112,16 @@ impl PendingRequests {
         self.requests
             .iter()
             .map(|r| (&r.participant, &r.response_arid))
+    }
+
+    pub fn iter_with_request(
+        &self,
+    ) -> impl Iterator<
+        Item = (&XID, Option<&bc_components::ARID>, &bc_components::ARID),
+    > {
+        self.requests.iter().map(|r| {
+            (&r.participant, r.request_arid.as_ref(), &r.response_arid)
+        })
     }
 
     pub fn len(&self) -> usize { self.requests.len() }

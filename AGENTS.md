@@ -1,6 +1,8 @@
 # Guidelines for Developers working with the `frost` crate
 
-## Important Crates in This Workspace
+Always read this *entire* file before working in this crate.
+
+## Relevant Crates in This Workspace
 
 - `bc-components`: Blockchain Commons Cryptographic Components
     - `XID`: eXtensible IDentifier

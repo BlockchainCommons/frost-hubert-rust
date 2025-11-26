@@ -629,6 +629,47 @@ jq . {qp(PARTICIPANT_DIRS["alice"])}/group-state/*/collected_round1.json
             ),
         )
 
+        # ── DKG Round 2 ─────────────────────────────────────────────────
+
+        run_step(
+            shell,
+            "Alice composes an unsealed Round 2 request (preview)",
+            f"""
+ROUND2_UNSEALED=$(frost dkg round2 send --unsealed --registry {qp(REGISTRIES["alice"])} "${{ALICE_GROUP_ID}}")
+echo "${{ROUND2_UNSEALED}}" | envelope format
+""",
+            commentary=(
+                "Preview one of the Round 2 requests (for the first participant). "
+                "Each participant gets a similar message with the same Round 1 packages, "
+                "but a unique responseArid where they should post their Round 2 response."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Alice sends individual Round 2 requests to each participant",
+            f"""
+frost dkg round2 send --storage $STORAGE --registry {qp(REGISTRIES["alice"])} "${{ALICE_GROUP_ID}}"
+""",
+            commentary=(
+                "Alice posts a separate sealed Round 2 request for each participant to Hubert. "
+                "Each message is encrypted specifically to that participant and contains "
+                "their unique response ARID."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Inspecting Alice's registry after Round 2 send",
+            f"""
+jq '.groups' {qp(REGISTRIES["alice"])}
+""",
+            commentary=(
+                "Alice's registry now has pending_requests for Round 2, mapping each participant "
+                "to both their request ARID (where they fetch) and response ARID (where they post)."
+            ),
+        )
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
