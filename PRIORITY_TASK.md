@@ -2,6 +2,10 @@
 
 - `invite send` replaces `invite compose`.
 - `invite view` is no longer necessary.
+- When Hubert storage parameters are present, post the sealed message and do not print the envelope; print the ARID only when it must be shared out-of-band (the coordinator's initial invite ARID). Subsequent GSTP messages include their response ARIDs when they expect further replies. `--unsealed` must be rejected with Hubert params.
+- When Hubert storage parameters are absent, print the sealed envelope UR by default; `--unsealed` prints the unsealed envelope UR for auditing.
+- `invite receive` handles Hubert retrieval or direct envelope input; it never emits ARIDs. Envelope printing is only for local inspection (suppressed with `--no-envelope`); `--info` controls detail output.
+- `invite respond` follows the same split: without Hubert params, print sealed (or unsealed with `--unsealed`) response envelopes; with Hubert params, post only and suppress envelope output (ARID is implied by the request/response flow).
 
 ```
 # Just composes the sealed invite and prints its envelope UR:
