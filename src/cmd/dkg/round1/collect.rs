@@ -172,6 +172,10 @@ impl CommandArgs {
             round1_packages
                 .iter()
                 .map(|(xid, package)| {
+                    // Keep packages in their canonical serialized form
+                    // (including per-package header) so
+                    // they can be fed directly into
+                    // FROST DKG part2 without reconstruction.
                     (xid.ur_string(), serde_json::to_value(package).unwrap())
                 })
                 .collect();

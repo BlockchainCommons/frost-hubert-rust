@@ -749,6 +749,28 @@ frost dkg round2 respond --verbose --storage $STORAGE --timeout $TIMEOUT --regis
             ),
         )
 
+        run_step(
+            shell,
+            "Alice collects Round 2 responses",
+            f"""
+ALICE_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["alice"])})
+frost dkg round2 collect --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["alice"])} "${{ALICE_GROUP_ID}}"
+""",
+            commentary=(
+                "Alice fetches Round 2 responses from Hubert, validates them, saves collected packages, "
+                "and records each participant's next response ARID for the finalize phase."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Inspecting collected Round 2 packages",
+            f"""
+jq . {qp(PARTICIPANT_DIRS["alice"])}/group-state/*/collected_round2.json
+""",
+            commentary="Collected Round 2 packages with each sender's next response ARID.",
+        )
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 

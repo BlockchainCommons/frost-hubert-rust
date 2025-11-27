@@ -19,7 +19,8 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
 
 4. **DKG Round 2** (`frost dkg round2`)
    - `send`: Coordinator sends individual sealed messages to each participant containing all Round 1 packages and their unique response ARID (posts to ARIDs participants specified in their invite responses)
-   - `respond`: Participants now respond (implemented) with round2 packages, persist round2 secret, include next `response_arid`, and update `listening_at_arid`
+   - `respond`: Participants respond with round2 packages, persist round2 secret, include next `response_arid`, and update `listening_at_arid`
+   - `collect`: Coordinator fetches/validates Round 2 responses, saves `collected_round2.json`, and updates pending_requests for finalize phase
 
 5. **Storage Backends**
    - Hubert server (HTTP)
@@ -36,26 +37,17 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
 
 ## Where the Demo Stops
 
-The `demo-log.md` now runs through participants responding to Round 2 (including preview) and posting to Hubert. Each participant has:
+The `demo-log.md` now runs through Round 2 send/respond/collect. Each participant has:
 - `registry.json` - Group membership, pending_requests (Round 2), updated `listening_at_arid` for finalize
 - `group-state/<group-id>/round1_secret.json` - Round 1 secret (participants only)
 - `group-state/<group-id>/round1_package.json` - Round 1 package (participants only)
 - `group-state/<group-id>/collected_round1.json` - All Round 1 packages (coordinator only)
 - `group-state/<group-id>/round2_secret.json` - Round 2 secret (participants only)
+- `group-state/<group-id>/collected_round2.json` - Round 2 packages keyed by sender/recipient plus next `response_arid`
 
 ## Next Steps (Priority Order)
 
-### 1. Coordinator Collects Round 2
-
-**Command (to implement):** `frost dkg round2 collect`
-
-The coordinator:
-- Fetches all Round 2 responses from Hubert (using `collect_from_arid` from pending_requests)
-- Validates each response (function, group, recipient, etc.)
-- Saves collected Round 2 packages to `collected_round2.json`
-- Updates pending_requests for finalize fan-out (send_to/collect_from)
-
-### 2. Coordinator Distributes Round 2 Packages
+### 1. Coordinator Distributes Round 2 Packages
 
 **Command:** `frost dkg finalize send`
 
@@ -63,7 +55,7 @@ The coordinator:
 - Redistributes each participant's incoming Round 2 packages to them
 - Each participant receives only the packages destined for them
 
-### 3. Participants Finalize Key Generation
+### 2. Participants Finalize Key Generation
 
 **Command:** `frost dkg finalize respond`
 

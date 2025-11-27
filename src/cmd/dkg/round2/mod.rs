@@ -1,3 +1,4 @@
+pub mod collect;
 pub mod respond;
 pub mod send;
 
@@ -18,6 +19,8 @@ enum Commands {
     Send(send::CommandArgs),
     /// Respond to a Round 2 request (participant only)
     Respond(respond::CommandArgs),
+    /// Collect Round 2 responses from all participants (coordinator only)
+    Collect(collect::CommandArgs),
 }
 
 impl CommandArgs {
@@ -25,6 +28,7 @@ impl CommandArgs {
         match self.command {
             Commands::Send(args) => args.exec(),
             Commands::Respond(args) => args.exec(),
+            Commands::Collect(args) => args.exec(),
         }
     }
 }
