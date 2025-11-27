@@ -798,6 +798,50 @@ frost dkg finalize send --verbose --storage $STORAGE --registry {qp(REGISTRIES["
             ),
         )
 
+        # ── Participants respond to finalize ──────────────────────────────
+
+        run_step(
+            shell,
+            "Bob previews finalize response",
+            f"""
+BOB_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["bob"])})
+frost dkg finalize respond --preview --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_GROUP_ID}}" | envelope format
+""",
+            commentary=(
+                "Bob previews his finalize response structure (key packages) without posting."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Bob posts finalize response",
+            f"""
+BOB_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["bob"])})
+frost dkg finalize respond --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_GROUP_ID}}"
+""",
+            commentary="Bob posts his finalize response with generated key packages.",
+        )
+
+        run_step(
+            shell,
+            "Carol posts finalize response",
+            f"""
+CAROL_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["carol"])})
+frost dkg finalize respond --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{CAROL_GROUP_ID}}"
+""",
+            commentary="Carol posts her finalize response with generated key packages.",
+        )
+
+        run_step(
+            shell,
+            "Dan posts finalize response",
+            f"""
+DAN_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["dan"])})
+frost dkg finalize respond --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{DAN_GROUP_ID}}"
+""",
+            commentary="Dan posts his finalize response with generated key packages.",
+        )
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 

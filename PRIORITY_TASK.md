@@ -21,8 +21,10 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
    - `send`: Coordinator sends individual sealed messages to each participant containing all Round 1 packages and their unique response ARID (posts to ARIDs participants specified in their invite responses)
    - `respond`: Participants respond with round2 packages, persist round2 secret, include next `response_arid`, and update `listening_at_arid`
    - `collect`: Coordinator fetches/validates Round 2 responses, saves `collected_round2.json`, and updates pending_requests for finalize phase
+
 5. **DKG Finalize** (`frost dkg finalize`)
    - `send`: Coordinator distributes collected Round 2 packages to each participant (with new `responseArid` for finalize respond)
+   - `respond`: Participants run part3, produce key/public key packages, persist them, and return finalize response
 
 5. **Storage Backends**
    - Hubert server (HTTP)
@@ -46,11 +48,21 @@ The `demo-log.md` now runs through Round 2 send/respond/collect and finalize sen
 - `group-state/<group-id>/collected_round1.json` - All Round 1 packages (coordinator only)
 - `group-state/<group-id>/round2_secret.json` - Round 2 secret (participants only)
 - `group-state/<group-id>/collected_round2.json` - Round 2 packages keyed by sender/recipient plus next `response_arid`
-- Finalize requests sent (awaiting finalize responses)
+- Finalize requests sent and participants respond with key/public key packages
 
 ## Next Steps (Priority Order)
 
-### 1. Participants Finalize Key Generation
+### 1. Coordinator Collects Finalize Responses
+
+**Command (to implement):** `frost dkg finalize collect`
+
+Coordinator:
+- Fetches all finalize responses (key/public key packages) from Hubert
+- Validates function/group/participants
+- Aggregates/stores group verifying key (`SigningPublicKey::Ed25519`, UR form `ur:signing-public-key`; CBOR form `SigningPublicKey(...)`)
+- Persists collected finalize data (e.g., `collected_finalize.json`) and updates registry
+
+### 2. Participants Finalize Key Generation
 
 **Command:** `frost dkg finalize respond`
 
@@ -138,11 +150,3 @@ Add integration tests for:
 
 - Demo now includes preview Round 2 response (no state change) followed by sealed post with `--verbose` for Hubert interactions.
 - After implementing subsequent phases, extend `frost-demo.py` to cover round2 collect, finalize send/respond, and signing.
-
-## Lower Priority Enhancements
-
-- **Timeout handling** for unresponsive participants
-- **Resharing** when participants need to be replaced
-- **Key rotation** for long-lived groups
-- **Audit logging** of all DKG and signing operations
-- **Recovery mode** if a participant loses state mid-protocol

@@ -329,11 +329,11 @@ fn extract_round1_packages(
             continue;
         }
 
-            // Extract the package bytes (stored as JSON tag)
-            let package_json: bc_components::JSON =
-                package_envelope.extract_subject()?;
-            let package: frost::keys::dkg::round1::Package =
-                serde_json::from_slice(package_json.as_bytes())?;
+        // Extract the package bytes (stored as JSON tag)
+        let package_json: bc_components::JSON =
+            package_envelope.extract_subject()?;
+        let package: frost::keys::dkg::round1::Package =
+            serde_json::from_slice(package_json.as_bytes())?;
         let package_for_storage = package.clone();
 
         // Get the identifier for this participant
