@@ -27,13 +27,13 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
    - `respond`: Participants run part3, produce key/public key packages, persist them, and return finalize response
    - `collect`: Coordinator collects finalize responses, writes `collected_finalize.json`, clears pending requests, and reports the group verifying key (`SigningPublicKey::Ed25519`, UR form `ur:signing-public-key`)
 
-5. **Storage Backends**
+6. **Storage Backends**
    - Hubert server (HTTP)
    - Mainline DHT
    - IPFS
    - Hybrid (DHT + IPFS)
 
-6. **Demo Script** (`frost-demo.py`)
+7. **Demo Script** (`frost-demo.py`)
    - Provisions 4 participants (Alice, Bob, Carol, Dan) in separate directories
    - Builds registries
    - Creates and responds to DKG invites via Hubert
@@ -44,7 +44,7 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
    - Participants post finalize responses
    - Coordinator collects finalize responses and outputs the group verifying key
 
-## Where the Demo Stops
+## Where the Demo Stops (current)
 
 The `demo-log.md` now runs through finalize collect. Each participant has:
 - `registry.json` - Group membership, pending_requests (Round 2), updated `listening_at_arid` for finalize
@@ -55,14 +55,50 @@ The `demo-log.md` now runs through finalize collect. Each participant has:
 - `group-state/<group-id>/collected_round2.json` - Round 2 packages keyed by sender/recipient plus next `response_arid`
 - Finalize requests sent and participants respond with key/public key packages
 - `group-state/<group-id>/collected_finalize.json` - Finalize responses; coordinator prints group verifying key (`ur:signing-public-key/...`)
+- Registry now also records `verifying_key` (UR) for both coordinator and participants after finalize respond/collect
 
 ## Next Steps (Priority Order)
 
-### 1. Threshold Signing Flow
+### 1. Threshold Signing Flow (detailed, in implementation order)
 
-- Implement `frost sign start/commit/collect/share/finish` following the planned multicast first hop (per-participant response ARIDs embedded/encrypted in the initial request) and 1-1 messages thereafter.
-- Persist signing session state under `group-state/<group-id>/signing/<session-id>/...` (commitments, shares, final signature).
-- Ensure the final aggregated signature is `Signature::Ed25519` and can be attached as `'signed': Signature` to the target envelope.
+1) **`frost sign start` (coordinator)**
+   - Inputs: group ID; target envelope (assumed already wrapped as needed).
+   - Derive: session ID (ARID) and target digest = digest(subject(target envelope)).
+   - Generate per-participant first-hop response ARIDs (where each participant will fetch the initial request), plus:
+     - a commitment collection ARID (where participants will post commitments),
+     - per-participant share ARIDs (where participants post signature shares).
+   - Build initial GSTP “signCommit” request with parameters: group, targetDigest, minSigners/participant list, commitmentCollectArid, per-participant shareArid (individually encrypted to each participant inside the body).
+   - Multicast pattern = DKG invite: per-participant response ARIDs encrypted under inner `recipient` assertion, then the whole GSTP request encrypted to all participants (multiple GSTP `recipient` assertions). No participant can see others’ ARIDs.
+   - Post to each participant’s `send_to_arid` (from registry pending_requests). Preview mode (`--preview`) prints unsealed request for one participant; sealed mode posts with `--verbose` as desired.
+   - Persist session state under `group-state/<group-id>/signing/<session-id>/start.json` (participant list, target digest, ARIDs).
+
+2) **`frost sign commit` (participant)**
+   - Fetch “signCommit” request from current `listening_at_arid`.
+   - Validate function/group/participant list; extract per-participant shareArid and commitmentCollectArid for self.
+   - Run FROST signing part1 to produce commitment(s); generate next `response_arid` for share response.
+   - Post GSTP response with commitments and `response_arid` to coordinator’s commitmentCollectArid (Hubert). Preview mode prints unsealed response only. Update local `listening_at_arid` to shareArid; persist part1 output under `group-state/<group-id>/signing/<session-id>/commit.json`.
+
+3) **`frost sign collect` (coordinator)**
+   - Collect all “signCommit” responses from commitmentCollectArid.
+   - Validate group/session IDs and participants; aggregate commitments.
+   - Build per-participant “signShare” GSTP request carrying aggregated commitments and each participant’s shareArid (where they will post their signature share). Pattern: 1-1 sealed delivery (no inner per-recipient ARIDs needed).
+   - Update registry pending_requests for the signing session, and persist commitments under `group-state/<group-id>/signing/<session-id>/commitments.json`.
+
+4) **`frost sign share` (participant)**
+   - Fetch “signShare” request from `listening_at_arid`.
+   - Validate group/session IDs; run FROST signing part2 to produce signature share using stored part1 state and aggregated commitments.
+   - Generate next `response_arid` (if further interaction needed; otherwise omit) and post GSTP response with signature share to coordinator’s share-collection ARID. Persist share under `group-state/<group-id>/signing/<session-id>/share.json`. Clear `listening_at_arid` when done.
+
+5) **`frost sign finish` (coordinator)**
+   - Collect all signature shares from the share-collection ARID; validate.
+   - Aggregate to final `Signature::Ed25519`.
+   - Persist final signature and session transcript under `group-state/<group-id>/signing/<session-id>/final.json`; print UR form for the signature. Any participant can attach it as `'signed': Signature` to the target envelope (CBOR `Signature(...)` in envelopes).
+
+**General patterns reused from DKG:**
+- ARID flow naming: `send_to_arid` (where coordinator posts), `collect_from_arid` (where coordinator polls), participant `response_arid`, local `listening_at_arid`.
+- Previews (`--preview`) are non-mutating and skip Hubert posts; `--verbose` shows Hubert transfers.
+- All signing is over the digest of the *subject* of the target envelope.
+- Store session artifacts under `group-state/<group-id>/signing/<session-id>/...`.
 
 ### 2. Group Status and Listing
 
@@ -95,6 +131,8 @@ pub struct PendingRequests {
     requests: Vec<PendingRequest>,  // Maps participant XID to send_to / collect_from
 }
 ```
+
+Group records now persist the aggregated `verifying_key` (UR `ur:signing-public-key/...`) once finalize respond/collect completes; merging enforces consistency across updates.
 
 ### GSTP Flow
 
