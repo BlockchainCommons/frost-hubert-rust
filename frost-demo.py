@@ -878,6 +878,48 @@ done
             ),
         )
 
+        # ── Signing session setup (start) ────────────────────────────────
+
+        run_step(
+            shell,
+            "Compose target envelope for signing",
+            f"""
+BASE_ENVELOPE=$(envelope subject type string "FROST signing demo target")
+TARGET_ENVELOPE=$(echo "${{BASE_ENVELOPE}}" | envelope assertion add pred-obj string purpose string "threshold signing demo")
+WRAPPED_TARGET=$(envelope subject type wrapped "${{TARGET_ENVELOPE}}")
+echo "${{WRAPPED_TARGET}}" > {qp(SIGN_TARGET)}
+envelope format < {qp(SIGN_TARGET)}
+""",
+            commentary=(
+                "Build a sample target envelope with an assertion, wrap it for signing, "
+                "and show its structure."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Preview signCommit request (unsealed)",
+            f"""
+ALICE_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["alice"])})
+frost sign start --preview --target {qp(SIGN_TARGET)} --registry {qp(REGISTRIES["alice"])} "${{ALICE_GROUP_ID}}" | envelope format
+""",
+            commentary=(
+                "Preview the unsealed signCommit GSTP request (initial signing hop)."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Post signCommit request to Hubert",
+            f"""
+ALICE_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["alice"])})
+frost sign start --verbose --storage $STORAGE --registry {qp(REGISTRIES["alice"])} --target {qp(SIGN_TARGET)} "${{ALICE_GROUP_ID}}"
+""",
+            commentary=(
+                "Coordinator posts the signCommit request to a single first-hop ARID (printed)."
+            ),
+        )
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
@@ -885,6 +927,7 @@ PATH_OBJECTS: set[Path] = set()
 PATH_REPLACEMENTS: list[tuple[str, str]] = []
 
 DEMO_DIR = register_path(SCRIPT_DIR / "demo")
+SIGN_TARGET = register_path(DEMO_DIR / "target-envelope.ur")
 
 PARTICIPANTS = ["alice", "bob", "carol", "dan"]
 

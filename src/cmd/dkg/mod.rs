@@ -6,6 +6,7 @@ pub mod round2;
 
 use anyhow::Result;
 use clap::{Args, Subcommand};
+pub use common::OptionalStorageSelector;
 
 /// Distributed key generation operations.
 #[derive(Debug, Args)]

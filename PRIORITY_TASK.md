@@ -64,9 +64,10 @@ The `demo-log.md` now runs through finalize collect. Each participant has:
 1) **`frost sign start` (coordinator)**
    - Inputs: group ID; target envelope (assumed already wrapped as needed).
    - Derive: session ID (ARID) and target digest = digest(subject(target envelope)).
-   - Generate per-participant first-hop response ARIDs (where each participant will fetch the initial request), plus:
-     - a commitment collection ARID (where participants will post commitments),
-     - per-participant share ARIDs (where participants post signature shares).
+   - Generate:
+     - a single first-hop ARID (write-once) where *each* participant retrieves the initial request (print its UR on output, same pattern as `dkg invite send`),
+     - per-participant commitment ARIDs (each participant gets a unique ARID to post their commitment; coordinator polls each) to be carried as `response_arid` fields inside the initial request (Hubert pattern: each message tells the peer where to respond),
+     - per-participant share ARIDs (where participants post signature shares) to be delivered as the next-hop `response_arid` inside the “signShare” request (again, the message carries the next ARID, not pre-agreed out-of-band).
    - Build initial GSTP “signCommit” request with parameters: group, targetDigest, minSigners/participant list, commitmentCollectArid, per-participant shareArid (individually encrypted to each participant inside the body).
    - Multicast pattern = DKG invite: per-participant response ARIDs encrypted under inner `recipient` assertion, then the whole GSTP request encrypted to all participants (multiple GSTP `recipient` assertions). No participant can see others’ ARIDs.
    - Post to each participant’s `send_to_arid` (from registry pending_requests). Preview mode (`--preview`) prints unsealed request for one participant; sealed mode posts with `--verbose` as desired.

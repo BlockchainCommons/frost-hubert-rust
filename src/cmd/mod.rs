@@ -6,6 +6,7 @@ use clap::{Parser, Subcommand};
 pub mod check;
 pub mod dkg;
 pub mod registry;
+pub mod sign;
 pub mod storage;
 
 /// FROST command-line interface definition.
@@ -28,6 +29,8 @@ enum Commands {
     Check(check::CommandArgs),
     /// Distributed key generation operations
     Dkg(dkg::CommandArgs),
+    /// Threshold signing operations
+    Sign(sign::CommandArgs),
 }
 
 impl Cli {
@@ -37,6 +40,7 @@ impl Cli {
             Commands::Registry(args) => args.exec(),
             Commands::Check(args) => args.exec(),
             Commands::Dkg(args) => args.exec(),
+            Commands::Sign(args) => args.exec(),
         }
     }
 }
