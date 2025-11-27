@@ -293,13 +293,10 @@ fn fetch_and_validate_response(
     // Extract round1_package as an envelope wrapping the byte string
     let round1_envelope: Envelope =
         result.object_for_predicate("round1_package")?;
-    let round1_cbor = round1_envelope
-        .try_leaf()
-        .context("round1_package is not a leaf")?;
-    let round1_bytes = CBOR::try_into_byte_string(round1_cbor)
-        .context("round1_package is not a byte string")?;
+    let round1_json: bc_components::JSON =
+        round1_envelope.extract_subject().context("round1_package missing")?;
     let round1_package: frost::keys::dkg::round1::Package =
-        serde_json::from_slice(&round1_bytes)
+        serde_json::from_slice(round1_json.as_bytes())
             .context("Failed to deserialize Round 1 package")?;
 
     Ok((round1_package, next_response_arid))

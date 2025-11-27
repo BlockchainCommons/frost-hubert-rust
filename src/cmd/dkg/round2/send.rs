@@ -283,9 +283,9 @@ fn build_round2_request_for_participant(
     // Add all Round 1 packages
     for (xid, package) in round1_packages {
         let encoded = serde_json::to_vec(package)?;
-        let bstr = CBOR::to_byte_string(encoded.as_slice());
+        let json = bc_components::JSON::from_data(encoded);
         let package_envelope =
-            Envelope::new(bstr).add_assertion("participant", *xid);
+            Envelope::new(CBOR::from(json)).add_assertion("participant", *xid);
         request = request.with_parameter("round1Package", package_envelope);
     }
 

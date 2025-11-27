@@ -297,14 +297,10 @@ fn fetch_response(
     for pkg_env in result.objects_for_predicate("round2Package") {
         let recipient: XID =
             pkg_env.extract_object_for_predicate("recipient")?;
-        let pkg_cbor = pkg_env
-            .subject()
-            .try_leaf()
-            .context("round2Package is not a leaf")?;
-        let pkg_bytes = CBOR::try_into_byte_string(pkg_cbor)
-            .context("round2Package is not a byte string")?;
+        let pkg_json: bc_components::JSON =
+            pkg_env.extract_subject().context("round2Package missing")?;
         let pkg: frost::keys::dkg::round2::Package =
-            serde_json::from_slice(&pkg_bytes)
+            serde_json::from_slice(pkg_json.as_bytes())
                 .context("Failed to deserialize round2 package")?;
         packages.push((recipient, pkg));
     }

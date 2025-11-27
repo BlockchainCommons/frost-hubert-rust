@@ -5,7 +5,7 @@ use std::{
 };
 
 use anyhow::{Context, Result, bail};
-use bc_components::{ARID, XID, XIDProvider};
+use bc_components::{ARID, JSON, XID, XIDProvider};
 use bc_envelope::prelude::*;
 use clap::Parser;
 use frost_ed25519::{self as frost, Identifier};
@@ -329,11 +329,11 @@ fn extract_round1_packages(
             continue;
         }
 
-        // Extract the package bytes
-        let package_cbor = package_envelope.subject().try_leaf()?;
-        let package_bytes = CBOR::try_into_byte_string(package_cbor)?;
-        let package: frost::keys::dkg::round1::Package =
-            serde_json::from_slice(&package_bytes)?;
+            // Extract the package bytes (stored as JSON tag)
+            let package_json: bc_components::JSON =
+                package_envelope.extract_subject()?;
+            let package: frost::keys::dkg::round1::Package =
+                serde_json::from_slice(package_json.as_bytes())?;
         let package_for_storage = package.clone();
 
         // Get the identifier for this participant
@@ -405,9 +405,9 @@ fn build_response_body(
             })?;
 
         let encoded = serde_json::to_vec(package)?;
-        let bstr = CBOR::to_byte_string(encoded.as_slice());
-        let package_envelope =
-            Envelope::new(bstr).add_assertion("recipient", *recipient_xid);
+        let json = JSON::from_data(encoded);
+        let package_envelope = Envelope::new(CBOR::from(json))
+            .add_assertion("recipient", *recipient_xid);
         envelope = envelope.add_assertion("round2Package", package_envelope);
     }
 

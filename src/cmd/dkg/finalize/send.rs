@@ -329,9 +329,9 @@ fn build_finalize_request_for_participant(
 
     for (pkg_sender, package) in packages {
         let encoded = serde_json::to_vec(package)?;
-        let bstr = CBOR::to_byte_string(encoded.as_slice());
-        let pkg_envelope =
-            Envelope::new(bstr).add_assertion("sender", *pkg_sender);
+        let json = bc_components::JSON::from_data(encoded);
+        let pkg_envelope = Envelope::new(CBOR::from(json))
+            .add_assertion("sender", *pkg_sender);
         request = request.with_parameter("round2Package", pkg_envelope);
     }
 

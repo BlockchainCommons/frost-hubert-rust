@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::{Context, Result, bail};
-use bc_components::{ARID, XID, XIDProvider};
+use bc_components::{ARID, JSON, XID, XIDProvider};
 use bc_envelope::prelude::*;
 use bc_ur::prelude::UR;
 use bc_xid::{XIDDocument, XIDVerifySignature};
@@ -827,8 +827,9 @@ fn build_response_body(
         .add_assertion("response_arid", response_arid);
     if let Some(package) = round1_package {
         let encoded = serde_json::to_vec(package)?;
-        let bstr = CBOR::to_byte_string(encoded.as_slice());
-        envelope = envelope.add_assertion("round1_package", bstr);
+        let json = JSON::from_data(encoded);
+        let cbor: CBOR = json.into();
+        envelope = envelope.add_assertion("round1_package", cbor);
     }
     Ok(envelope)
 }
