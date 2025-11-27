@@ -65,7 +65,7 @@ The `demo-log.md` now runs through finalize collect. Each participant has:
 - Implemented: `frost sign start` (coordinator) with first-hop ARID, per-participant commit/share ARIDs, full target envelope, preview and Hubert post.
 - Pending: `frost sign commit`, `frost sign collect`, `frost sign share`, `frost sign finish`.
 
-1) **`frost sign start` (coordinator)**
+1) ✅ **`frost sign start` (coordinator)**
    - Inputs: group ID; target envelope (assumed already wrapped as needed).
    - Derive: session ID (ARID) and target digest = digest(subject(target envelope)).
    - Generate:
@@ -79,9 +79,9 @@ The `demo-log.md` now runs through finalize collect. Each participant has:
 
 2) **`frost sign commit` (participant)**
    - Fetch “signCommit” request from current `listening_at_arid`.
-   - Validate function/group/participant list; extract per-participant shareArid and commitmentCollectArid for self.
-   - Run FROST signing part1 to produce commitment(s); generate next `response_arid` for share response.
-   - Post GSTP response with commitments and `response_arid` to coordinator’s commitmentCollectArid (Hubert). Preview mode prints unsealed response only. Update local `listening_at_arid` to shareArid; persist part1 output under `group-state/<group-id>/signing/<session-id>/commit.json`.
+   - Validate function/group/participant list; extract your `response_arid` (commit post target) from the request.
+   - Run FROST signing part1 to produce commitment(s); generate the next `response_arid` for the share phase (if needed) to include in your response.
+   - Post GSTP response with commitments (and your next `response_arid`) to the coordinator’s commit ARID (Hubert). Preview mode prints unsealed response only. Persist part1 output under `group-state/<group-id>/signing/<session-id>/commit.json`; set `listening_at_arid` to the share request ARID provided in the request (Hubert ARIDs are write-once).
 
 3) **`frost sign collect` (coordinator)**
    - Collect all “signCommit” responses from commitmentCollectArid.
