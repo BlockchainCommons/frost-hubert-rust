@@ -1008,6 +1008,30 @@ frost sign commit --storage $STORAGE --registry {qp(REGISTRIES["dan"])} "${{DAN_
             ),
         )
 
+        run_step(
+            shell,
+            "Alice collects commitments and posts signShare requests",
+            f"""
+START_PATH=$(ls -t {qp(PARTICIPANT_DIRS["alice"])}/group-state/*/signing/*/start.json | head -n1)
+SESSION_ID=$(jq -r '.session_id' "${{START_PATH}}")
+frost sign collect --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["alice"])} "${{SESSION_ID}}"
+""",
+            commentary=(
+                "Alice gathers the signCommit responses, aggregates commitments, "
+                "and sends per-participant signShare requests."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Inspecting collected commitments",
+            f"""
+COMMITMENTS_PATH=$(ls -t {qp(PARTICIPANT_DIRS["alice"])}/group-state/*/signing/*/commitments.json | head -n1)
+jq . "${{COMMITMENTS_PATH}}"
+""",
+            commentary="Commitments and ARIDs keyed by participant XID.",
+        )
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 

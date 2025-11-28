@@ -17,7 +17,7 @@ use crate::{
     cmd::{
         is_verbose, registry::participants_file_path, storage::StorageClient,
     },
-    registry::{GroupParticipant, PendingRequests, Registry},
+    registry::{GroupParticipant, Registry},
 };
 
 /// Start a threshold signing session (coordinator only).
@@ -52,13 +52,9 @@ impl CommandArgs {
         }
 
         let registry_path = participants_file_path(self.registry.clone())?;
-        let mut registry =
-            Registry::load(&registry_path).with_context(|| {
-                format!(
-                    "Failed to load registry at {}",
-                    registry_path.display()
-                )
-            })?;
+        let registry = Registry::load(&registry_path).with_context(|| {
+            format!("Failed to load registry at {}", registry_path.display())
+        })?;
 
         let owner = registry
             .owner()
@@ -260,20 +256,6 @@ impl CommandArgs {
         runtime.block_on(async {
             client.put(&start_arid, &sealed_envelope).await
         })?;
-
-        // Set pending requests to collect commitments (no send_to_arid yet)
-        let mut pending = PendingRequests::new();
-        for participant in &participants {
-            pending.add_collect_only(
-                *participant.xid(),
-                *commit_arids.get(participant.xid()).unwrap(),
-            );
-        }
-        let group_record = registry
-            .group_mut(&group_id)
-            .context("Group not found in registry")?;
-        group_record.set_pending_requests(pending);
-        registry.save(&registry_path)?;
 
         println!("{}", start_arid.ur_string());
 
