@@ -1,3 +1,5 @@
+pub mod commit;
+pub mod receive;
 pub mod start;
 
 use anyhow::Result;
@@ -15,12 +17,18 @@ pub struct CommandArgs {
 enum Commands {
     /// Start a threshold signing session (coordinator only)
     Start(start::CommandArgs),
+    /// Inspect a signCommit request (participant)
+    Receive(receive::CommandArgs),
+    /// Respond to a signCommit request (participant)
+    Commit(commit::CommandArgs),
 }
 
 impl CommandArgs {
     pub fn exec(self) -> Result<()> {
         match self.command {
             Commands::Start(args) => args.exec(),
+            Commands::Receive(args) => args.exec(),
+            Commands::Commit(args) => args.exec(),
         }
     }
 }

@@ -1,4 +1,4 @@
-mod common;
+pub mod common;
 pub mod finalize;
 pub mod invite;
 pub mod round1;

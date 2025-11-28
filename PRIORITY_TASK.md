@@ -62,7 +62,9 @@ The `demo-log.md` now runs through finalize collect. Each participant has:
 
 ### 1. Threshold Signing Flow (status + implementation order)
 
-- Implemented: `frost sign start` (coordinator) with first-hop ARID, per-participant commit/share ARIDs, full target envelope, preview and Hubert post.
+- Implemented:
+  - `frost sign start` (coordinator) with first-hop ARID, per-participant commit/share ARIDs, full target envelope, preview and Hubert post.
+  - `frost sign receive` (participant viewer): fetches/decrypts signCommit, validates sender/group/session/minSigners, shows sorted participants (lexicographic XID), formatted target envelope, persists request details (`sign_receive.json`) including response ARID for follow-up commands; no ARID printed to user (write-once).
 - Pending: `frost sign commit`, `frost sign collect`, `frost sign share`, `frost sign finish`.
 
 1) ✅ **`frost sign start` (coordinator)**
@@ -77,24 +79,32 @@ The `demo-log.md` now runs through finalize collect. Each participant has:
    - Post to each participant’s `send_to_arid` (from registry pending_requests). Preview mode (`--preview`) prints unsealed request for one participant; sealed mode posts with `--verbose` as desired.
    - Persist session state under `group-state/<group-id>/signing/<session-id>/start.json` (participant list, target digest, ARIDs).
 
-2) **`frost sign commit` (participant)**
-   - Fetch “signCommit” request from current `listening_at_arid`.
-   - Validate function/group/participant list; extract your `response_arid` (commit post target) from the request.
-   - Run FROST signing part1 to produce commitment(s); generate the next `response_arid` for the share phase (if needed) to include in your response.
-   - Post GSTP response with commitments (and your next `response_arid`) to the coordinator’s commit ARID (Hubert). Preview mode prints unsealed response only. Persist part1 output under `group-state/<group-id>/signing/<session-id>/commit.json`; set `listening_at_arid` to the share request ARID provided in the request (Hubert ARIDs are write-once).
+2) ✅ **`frost sign receive` (participant)**
+   - Pattern after `dkg invite receive`: supports Hubert fetch by ARID with optional `--timeout`, or direct envelope UR; `--timeout` requires storage, ARID inputs require storage, `--preview` not needed (non-mutating viewer).
+   - Decrypt “signCommit” with owner private keys; validate function, session ID, group ID, minSigners bounds, and that caller’s XID is present in participant list.
+   - Extract and display (with `--info`) key fields: coordinator, participant list, target digest/envelope summary, your commit `response_arid`, and your next-hop share ARID if present. `--no-envelope` mirrors invite receive behavior.
+   - Persist request details to `group-state/<group-id>/signing/<session-id>/sign_receive.json` (source envelope UR, group/session IDs, coordinator, minSigners, sorted participants, response ARID, target UR); leave `registry.json` untouched. Do not print response ARID (write-once; persisted instead).
 
-3) **`frost sign collect` (coordinator)**
+3) **`frost sign commit` (participant respond)**
+   - Pattern after `dkg invite respond`: requires Hubert storage when posting; `--timeout` only with storage; MUST support `--preview` to show the unsealed response and dry-run (no state changes, no Hubert posts). Include an explicit rejection path (`--reject <reason>`) that posts a GSTP error/decline to the coordinator’s commit ARID and clears local signing state/listening ARID.
+   - Load persisted details from `sign_receive.json` (group/session IDs, coordinator-provided response ARID, target UR, participants, coordinator) instead of re-fetching from Hubert; validate consistency. Coordinator must supply the commit `response_arid`; the participant generates only the next-hop ARID for the coordinator’s forthcoming signShare request.
+   - Load participant key package (`contributions.key_package` from registry), run FROST signing part1 (`round1::commit`) to produce signing nonces + commitments; compute/record target digest from the request (use persisted target UR if present to avoid structural drift).
+   - Build GSTP response (e.g., `signCommitResponse`) carrying group, session, participant, commitments (JSON/CBOR), and the share-request ARID for the next hop; include `peer_continuation` from request, sign with owner keys, and encrypt to coordinator.
+   - Post to coordinator’s commit ARID (from request). Persist part1 state under `group-state/<group-id>/signing/<session-id>/commit.json` (nonces, commitments, target digest, session metadata, share-request ARID) and update `registry.json` to set `listening_at_arid` to the share-request ARID for the upcoming signShare step.
+   - Extend demo script to have each participant run `frost sign commit` after viewing the request. Only show the first user's preview output in the demo log. Reinstall the tool before running the demo.
+
+4) **`frost sign collect` (coordinator)**
    - Collect all “signCommit” responses from commitmentCollectArid.
    - Validate group/session IDs and participants; aggregate commitments.
    - Build per-participant “signShare” GSTP request carrying aggregated commitments and each participant’s shareArid (where they will post their signature share). Pattern: 1-1 sealed delivery (no inner per-recipient ARIDs needed).
    - Update registry pending_requests for the signing session, and persist commitments under `group-state/<group-id>/signing/<session-id>/commitments.json`.
 
-4) **`frost sign share` (participant)**
+5) **`frost sign share` (participant)**
    - Fetch “signShare” request from `listening_at_arid`.
    - Validate group/session IDs; run FROST signing part2 to produce signature share using stored part1 state and aggregated commitments.
    - Generate next `response_arid` (if further interaction needed; otherwise omit) and post GSTP response with signature share to coordinator’s share-collection ARID. Persist share under `group-state/<group-id>/signing/<session-id>/share.json`. Clear `listening_at_arid` when done.
 
-5) **`frost sign finish` (coordinator)**
+6) **`frost sign finish` (coordinator)**
    - Collect all signature shares from the share-collection ARID; validate.
    - Aggregate to final `Signature::Ed25519`.
    - Persist final signature and session transcript under `group-state/<group-id>/signing/<session-id>/final.json`; print UR form for the signature. Any participant can attach it as `'signed': Signature` to the target envelope (CBOR `Signature(...)` in envelopes).

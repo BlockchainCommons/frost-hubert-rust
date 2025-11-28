@@ -913,10 +913,111 @@ frost sign start --preview --target {qp(SIGN_TARGET)} --registry {qp(REGISTRIES[
             "Post signCommit request to Hubert",
             f"""
 ALICE_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["alice"])})
-frost sign start --verbose --storage $STORAGE --registry {qp(REGISTRIES["alice"])} --target {qp(SIGN_TARGET)} "${{ALICE_GROUP_ID}}"
+ALICE_SIGN_START_ARID=$(frost sign start --verbose --storage $STORAGE --registry {qp(REGISTRIES["alice"])} --target {qp(SIGN_TARGET)} "${{ALICE_GROUP_ID}}")
+echo "${{ALICE_SIGN_START_ARID}}"
 """,
             commentary=(
                 "Coordinator posts the signCommit request to a single first-hop ARID (printed)."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Bob inspects signCommit request",
+            f"""
+START_PATH=$(ls -t demo/alice/group-state/*/signing/*/start.json | head -n1)
+ALICE_SIGN_START_ARID=$(jq -r '.start_arid' "${{START_PATH}}")
+frost sign receive --info --no-envelope --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{ALICE_SIGN_START_ARID}}"
+""",
+            commentary=(
+                "Bob fetches and decrypts the signCommit request via Hubert and views the details of the session."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Alice inspects signCommit request",
+            f"""
+START_PATH=$(ls -t demo/alice/group-state/*/signing/*/start.json | head -n1)
+ALICE_SIGN_START_ARID=$(jq -r '.start_arid' "${{START_PATH}}")
+frost sign receive --no-envelope --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["alice"])} "${{ALICE_SIGN_START_ARID}}"
+""",
+            commentary=(
+                "Alice (coordinator) fetches the signCommit request; she does not sign because she has no key package."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Carol inspects signCommit request",
+            f"""
+START_PATH=$(ls -t demo/alice/group-state/*/signing/*/start.json | head -n1)
+ALICE_SIGN_START_ARID=$(jq -r '.start_arid' "${{START_PATH}}")
+frost sign receive --no-envelope --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{ALICE_SIGN_START_ARID}}"
+""",
+            commentary=(
+                "Carol fetches and decrypts the signCommit request via Hubert."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Dan inspects signCommit request",
+            f"""
+START_PATH=$(ls -t demo/alice/group-state/*/signing/*/start.json | head -n1)
+ALICE_SIGN_START_ARID=$(jq -r '.start_arid' "${{START_PATH}}")
+frost sign receive --no-envelope --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{ALICE_SIGN_START_ARID}}"
+""",
+            commentary=(
+                "Dan fetches and decrypts the signCommit request via Hubert."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Bob previews signCommit response",
+            f"""
+BOB_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["bob"])})
+frost sign commit --preview --registry {qp(REGISTRIES["bob"])} "${{BOB_GROUP_ID}}" | envelope format
+""",
+            commentary=(
+                "Bob dry-runs his signCommit response, showing commitments and next-hop response ARID without posting."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Bob posts signCommit response",
+            f"""
+BOB_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["bob"])})
+frost sign commit --storage $STORAGE --registry {qp(REGISTRIES["bob"])} "${{BOB_GROUP_ID}}"
+""",
+            commentary=(
+                "Bob posts his signCommit response to the coordinator."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Carol posts signCommit response",
+            f"""
+CAROL_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["carol"])})
+frost sign commit --storage $STORAGE --registry {qp(REGISTRIES["carol"])} "${{CAROL_GROUP_ID}}"
+""",
+            commentary=(
+                "Carol posts her signCommit response to the coordinator."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Dan posts signCommit response",
+            f"""
+DAN_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["dan"])})
+frost sign commit --storage $STORAGE --registry {qp(REGISTRIES["dan"])} "${{DAN_GROUP_ID}}"
+""",
+            commentary=(
+                "Dan posts his signCommit response to the coordinator."
             ),
         )
 

@@ -89,6 +89,7 @@ impl CommandArgs {
                     self.target_envelope
                 )
             })?;
+        let target_ur = target_envelope.ur_string();
         let _target_digest: Digest = target_envelope.subject().digest();
 
         // Build participant set: group participants plus coordinator if missing
@@ -128,7 +129,7 @@ impl CommandArgs {
 
         // ARIDs
         let session_id = ARID::new();
-        let first_hop_arid = ARID::new();
+        let start_arid = ARID::new();
 
         // Per-participant ARIDs
         let mut commit_arids: HashMap<XID, ARID> = HashMap::new();
@@ -149,6 +150,7 @@ impl CommandArgs {
         .with_parameter("group", group_id)
         .with_parameter("session", session_id)
         .with_parameter("target", target_envelope.clone())
+        .with_parameter("targetUR", target_ur.clone())
         .with_parameter("minSigners", group_record.min_signers() as u64)
         .with_date(Date::now())
         .with_parameter("validUntil", valid_until);
@@ -209,8 +211,8 @@ impl CommandArgs {
             serde_json::Value::String(session_id.ur_string()),
         );
         root.insert(
-            "first_hop_arid".to_string(),
-            serde_json::Value::String(first_hop_arid.ur_string()),
+            "start_arid".to_string(),
+            serde_json::Value::String(start_arid.ur_string()),
         );
         root.insert(
             "group".to_string(),
@@ -226,10 +228,7 @@ impl CommandArgs {
             "participants".to_string(),
             serde_json::Value::Object(participants_map),
         );
-        root.insert(
-            "target".to_string(),
-            serde_json::Value::String(target_envelope.ur_string()),
-        );
+        root.insert("target".to_string(), serde_json::Value::String(target_ur));
 
         // Build envelope
         let recipient_refs: Vec<&XIDDocument> = recipient_docs.iter().collect();
@@ -260,12 +259,12 @@ impl CommandArgs {
         if is_verbose() {
             eprintln!(
                 "Posting signCommit request to {}",
-                first_hop_arid.ur_string()
+                start_arid.ur_string()
             );
         }
 
         runtime.block_on(async {
-            client.put(&first_hop_arid, &sealed_envelope).await
+            client.put(&start_arid, &sealed_envelope).await
         })?;
 
         // Set pending requests to collect commitments (no send_to_arid yet)
@@ -282,7 +281,7 @@ impl CommandArgs {
         group_record.set_pending_requests(pending);
         registry.save(&registry_path)?;
 
-        println!("{}", first_hop_arid.ur_string());
+        println!("{}", start_arid.ur_string());
 
         Ok(())
     }

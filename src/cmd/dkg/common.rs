@@ -178,29 +178,32 @@ pub fn participant_names_from_registry(
     owner_xid: &XID,
     owner_pet_name: Option<&str>,
 ) -> Result<Vec<String>> {
-    let mut names = Vec::new();
-    for document in participants {
-        let xid = document.xid();
-        let is_owner = xid == *owner_xid;
-        let name = if is_owner {
-            owner_pet_name
-                .map(|n| n.to_owned())
-                .unwrap_or_else(|| xid.ur_string())
-        } else {
-            let record = registry.participant(&xid).ok_or_else(|| {
-                anyhow::anyhow!(
-                    "Invite participant not found in registry: {}",
-                    xid.ur_string()
-                )
-            })?;
-            record
-                .pet_name()
-                .map(|n| n.to_owned())
-                .unwrap_or_else(|| xid.ur_string())
-        };
-        names.push(format_name_with_owner_marker(name, is_owner));
-    }
-    Ok(names)
+    let mut docs: Vec<XIDDocument> = participants.to_vec();
+    docs.sort_by_key(|doc| doc.xid());
+
+    docs.iter()
+        .map(|document| {
+            let xid = document.xid();
+            let is_owner = xid == *owner_xid;
+            let name = if is_owner {
+                owner_pet_name
+                    .map(|n| n.to_owned())
+                    .unwrap_or_else(|| xid.ur_string())
+            } else {
+                let record = registry.participant(&xid).ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "Invite participant not found in registry: {}",
+                        xid.ur_string()
+                    )
+                })?;
+                record
+                    .pet_name()
+                    .map(|n| n.to_owned())
+                    .unwrap_or_else(|| xid.ur_string())
+            };
+            Ok(format_name_with_owner_marker(name, is_owner))
+        })
+        .collect()
 }
 
 #[allow(dead_code)]

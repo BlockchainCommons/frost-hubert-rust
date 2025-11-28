@@ -12,6 +12,7 @@ pub mod storage;
 /// FROST command-line interface definition.
 #[derive(Debug, Parser)]
 #[command(author, version, about = "FROST command line toolkit")]
+#[command(infer_subcommands = true)]
 pub struct Cli {
     /// Enable verbose output for hubert interactions and progress messages
     #[arg(long, global = true)]
