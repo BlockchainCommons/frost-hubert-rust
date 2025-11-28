@@ -532,7 +532,7 @@ echo "${{ALICE_INVITE_ARID}}"
             "Receiving invite from Hubert as Bob",
             f"""
 BOB_INVITE=$(frost dkg invite receive --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{ALICE_INVITE_ARID}}")
-frost dkg invite receive --info --no-envelope --registry {qp(REGISTRIES["bob"])} "${{BOB_INVITE}}"
+frost dkg invite receive --info --registry {qp(REGISTRIES["bob"])} "${{BOB_INVITE}}"
 """,
             commentary=(
                 "Retrieve the invite from Hubert using Bob's registry (capturing the envelope), "
@@ -927,7 +927,7 @@ echo "${{ALICE_SIGN_START_ARID}}"
             f"""
 START_PATH=$(ls -t demo/alice/group-state/*/signing/*/start.json | head -n1)
 ALICE_SIGN_START_ARID=$(jq -r '.start_arid' "${{START_PATH}}")
-BOB_SESSION_ID=$(frost sign receive --info --no-envelope --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{ALICE_SIGN_START_ARID}}" | tee /dev/stderr | tail -n1)
+BOB_SESSION_ID=$(frost sign receive --info --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{ALICE_SIGN_START_ARID}}" | tee /dev/stderr | tail -n1)
 """,
             commentary=(
                 "Bob fetches and decrypts the signCommit request via Hubert and views the details of the session."
@@ -940,7 +940,7 @@ BOB_SESSION_ID=$(frost sign receive --info --no-envelope --storage $STORAGE --ti
             f"""
 START_PATH=$(ls -t demo/alice/group-state/*/signing/*/start.json | head -n1)
 ALICE_SIGN_START_ARID=$(jq -r '.start_arid' "${{START_PATH}}")
-CAROL_SESSION_ID=$(frost sign receive --no-envelope --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{ALICE_SIGN_START_ARID}}" | tee /dev/stderr | tail -n1)
+CAROL_SESSION_ID=$(frost sign receive --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{ALICE_SIGN_START_ARID}}" | tee /dev/stderr | tail -n1)
 """,
             commentary=(
                 "Carol fetches and decrypts the signCommit request via Hubert."
@@ -953,7 +953,7 @@ CAROL_SESSION_ID=$(frost sign receive --no-envelope --storage $STORAGE --timeout
             f"""
 START_PATH=$(ls -t demo/alice/group-state/*/signing/*/start.json | head -n1)
 ALICE_SIGN_START_ARID=$(jq -r '.start_arid' "${{START_PATH}}")
-DAN_SESSION_ID=$(frost sign receive --no-envelope --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{ALICE_SIGN_START_ARID}}" | tee /dev/stderr | tail -n1)
+DAN_SESSION_ID=$(frost sign receive --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{ALICE_SIGN_START_ARID}}" | tee /dev/stderr | tail -n1)
 """,
             commentary=(
                 "Dan fetches and decrypts the signCommit request via Hubert."

@@ -40,10 +40,6 @@ pub struct CommandArgs {
     #[arg(long = "timeout", value_name = "SECONDS")]
     timeout: Option<u64>,
 
-    /// Suppress printing the request envelope UR
-    #[arg(long = "no-envelope")]
-    no_envelope: bool,
-
     /// Show request details (coordinator, participants, ARIDs, target digest)
     #[arg(long)]
     info: bool,
@@ -177,21 +173,17 @@ impl CommandArgs {
 
         let target_envelope = sealed_request.object_for_parameter("target")?;
 
-        if self.info {
-            let coordinator_name =
-                resolve_sender_name(&registry, sealed_request.sender())
-                    .unwrap_or_else(|| {
-                        sealed_request.sender().xid().ur_string()
-                    });
-            let participant_names =
-                format_participant_names(&registry, &participants, &owner);
-            println!("Group: {}", group_id.ur_string());
-            println!("Coordinator: {}", coordinator_name);
-            println!("Min signers: {}", min_signers);
-            println!("Participants: {}", participant_names.join(", "));
-            println!("Target:");
-            println!("{}", target_envelope.format());
-        }
+        let coordinator_name =
+            resolve_sender_name(&registry, sealed_request.sender())
+                .unwrap_or_else(|| sealed_request.sender().xid().ur_string());
+        let participant_names =
+            format_participant_names(&registry, &participants, &owner);
+        println!("Group: {}", group_id.ur_string());
+        println!("Coordinator: {}", coordinator_name);
+        println!("Min signers: {}", min_signers);
+        println!("Participants: {}", participant_names.join(", "));
+        println!("Target:");
+        println!("{}", target_envelope.format());
 
         // Primary output for scripting: session ID on its own line (no header).
         println!("{}", session_id.ur_string());

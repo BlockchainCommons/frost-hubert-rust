@@ -44,6 +44,7 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
    - Participants post finalize responses
    - Coordinator collects finalize responses and outputs the group verifying key
    - Signing: builds a sample target envelope, previews `sign start` (signCommit) unsealed, and posts it to Hubert
+   - Signing: participants now capture the session ID from `sign receive` output, use it for `sign commit`, and coordinator previews signShare during collect
 
 ## Where the Demo Stops (current)
 
@@ -94,11 +95,12 @@ The `demo-log.md` now runs through finalize collect. Each participant has:
    - Post to coordinator’s commit ARID (from request). Persist part1 state under `group-state/<group-id>/signing/<session-id>/commit.json` (nonces, commitments, target digest, session metadata, share-request ARID) and update `registry.json` to set `listening_at_arid` to the share-request ARID for the upcoming signShare step.
    - Demo notes: Show one participant preview; others post without preview.
 
-4) **`frost sign collect` (coordinator)**
-   - Collect all “signCommit” responses from commitmentCollectArid.
-   - Validate group/session IDs and participants; aggregate commitments.
+4) ✅ **`frost sign collect` (coordinator)**
+   - Collect all “signCommit” responses from the per-participant commit ARIDs recorded in `start.json` (no shared pending_requests; session-centric).
+   - Validate session ID + sender, aggregate commitments, and persist per-participant commitments + share ARIDs under `group-state/<group-id>/signing/<session-id>/commitments.json`.
    - Build per-participant “signShare” GSTP request carrying aggregated commitments and each participant’s shareArid (where they will post their signature share). Pattern: 1-1 sealed delivery (no inner per-recipient ARIDs needed, just a single response ARID).
-   - Update registry pending_requests for the signing session, and persist commitments under `group-state/<group-id>/signing/<session-id>/commitments.json`.
+   - `--preview-share` prints one unsealed signShare request during collect.
+   - Redundant fields removed: signShare carries only session, response_arid, and commitments (no group/minSigners/targetDigest).
 
 5) **`frost sign share` (participant)**
    - Fetch “signShare” request from `listening_at_arid`.
@@ -157,6 +159,19 @@ The pattern is established:
 2. Participants decrypt, validate, process
 3. Participants send `SealedResponse` with result or error
 4. Coordinator collects responses
+
+### Lessons Learned / Cleanup
+
+- Sign state is now fully session-scoped: start/commit/collect use session IDs directly; group-level pending_requests are no longer used for signing phases.
+- Avoid redundant fields: signShare drops group/minSigners/targetDigest; signCommitResponse drops group/targetDigest. Participants enforce invariants from the signed start state instead.
+- Always transmit the literal target envelope, not a UR wrapper; digest validation relies on the envelope itself.
+- `--no-envelope` was removed from receive flows; outputs now include info plus the bare session line for scripting.
+
+### Next Steps
+
+- Implement `frost sign share` (participant) with validation of minSigners/target digest from persisted start state and signShare payload; post signature shares to share_arid.
+- Implement `frost sign finish` (coordinator) to collect signature shares, aggregate the signature, persist/print signature UR, and attach to the target envelope.
+- Add integration coverage for signShare/signFinish, including failure cases (threshold mismatch, stale/incorrect session).
 
 ### Test Coverage
 
