@@ -92,15 +92,9 @@ impl CommandArgs {
         let target_ur = target_envelope.ur_string();
         let _target_digest: Digest = target_envelope.subject().digest();
 
-        // Build participant set: group participants plus coordinator if missing
-        let mut participants: Vec<GroupParticipant> =
+        // Build participant set (signers): group participants only
+        let participants: Vec<GroupParticipant> =
             group_record.participants().to_vec();
-        if !participants
-            .iter()
-            .any(|p| p.xid() == group_record.coordinator().xid())
-        {
-            participants.push(group_record.coordinator().clone());
-        }
 
         // Gather XID documents for all participants
         let mut recipient_docs: Vec<XIDDocument> = Vec::new();

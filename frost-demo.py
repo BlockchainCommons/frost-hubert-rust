@@ -936,19 +936,6 @@ frost sign receive --info --no-envelope --storage $STORAGE --timeout $TIMEOUT --
 
         run_step(
             shell,
-            "Alice inspects signCommit request",
-            f"""
-START_PATH=$(ls -t demo/alice/group-state/*/signing/*/start.json | head -n1)
-ALICE_SIGN_START_ARID=$(jq -r '.start_arid' "${{START_PATH}}")
-frost sign receive --no-envelope --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["alice"])} "${{ALICE_SIGN_START_ARID}}"
-""",
-            commentary=(
-                "Alice (coordinator) fetches the signCommit request; she does not sign because she has no key package."
-            ),
-        )
-
-        run_step(
-            shell,
             "Carol inspects signCommit request",
             f"""
 START_PATH=$(ls -t demo/alice/group-state/*/signing/*/start.json | head -n1)
