@@ -12,7 +12,7 @@ use frost_ed25519 as frost;
 use gstp::SealedResponse;
 use tokio::runtime::Runtime;
 
-use super::super::common::{OptionalStorageSelector, parse_arid_ur};
+use crate::cmd::dkg::common::{OptionalStorageSelector, parse_arid_ur};
 use crate::{
     cmd::{
         is_verbose, registry::participants_file_path, storage::StorageClient,

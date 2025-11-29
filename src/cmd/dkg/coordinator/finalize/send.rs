@@ -14,7 +14,7 @@ use frost_ed25519 as frost;
 use gstp::SealedRequest;
 use tokio::runtime::Runtime;
 
-use super::super::common::OptionalStorageSelector;
+use crate::cmd::dkg::common::OptionalStorageSelector;
 use crate::{
     cmd::{
         is_verbose, registry::participants_file_path, storage::StorageClient,

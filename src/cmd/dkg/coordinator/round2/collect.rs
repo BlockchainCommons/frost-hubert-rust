@@ -11,7 +11,7 @@ use frost_ed25519 as frost;
 use gstp::SealedResponse;
 use tokio::runtime::Runtime;
 
-use super::super::common::OptionalStorageSelector;
+use crate::cmd::dkg::common::OptionalStorageSelector;
 use crate::{
     cmd::{
         dkg::common::parse_arid_ur, is_verbose,
