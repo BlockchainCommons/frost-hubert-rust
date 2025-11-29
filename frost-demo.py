@@ -1028,6 +1028,69 @@ jq . "${{COMMITMENTS_PATH}}"
             commentary="Commitments and ARIDs keyed by participant XID.",
         )
 
+        run_step(
+            shell,
+            "Bob previews signShare response",
+            f"""
+frost sign share --preview --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_SESSION_ID}}" | envelope format
+""",
+            commentary=(
+                "Bob fetches the signShare request, validates commitments, "
+                "computes his signature share, and previews the response without posting."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Bob posts signShare response",
+            f"""
+frost sign share --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_SESSION_ID}}"
+""",
+            commentary="Bob posts his signature share to the coordinator's share collection ARID.",
+        )
+
+        run_step(
+            shell,
+            "Carol posts signShare response",
+            f"""
+frost sign share --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{CAROL_SESSION_ID}}"
+""",
+            commentary="Carol posts her signature share to the coordinator.",
+        )
+
+        run_step(
+            shell,
+            "Dan posts signShare response",
+            f"""
+frost sign share --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{DAN_SESSION_ID}}"
+""",
+            commentary="Dan posts his signature share to the coordinator.",
+        )
+
+        run_step(
+            shell,
+            "Inspecting Bob's signature share",
+            f"""
+SHARE_PATH=$(ls -t {qp(PARTICIPANT_DIRS["bob"])}/group-state/*/signing/*/share.json | head -n1)
+jq . "${{SHARE_PATH}}"
+""",
+            commentary="Persisted signature share and signing context for Bob.",
+        )
+
+        run_step(
+            shell,
+            "Alice finalizes and posts finalize packages",
+            f"""
+START_PATH=$(ls -t {qp(PARTICIPANT_DIRS["alice"])}/group-state/*/signing/*/start.json | head -n1)
+SESSION_ID=$(jq -r '.session_id' "${{START_PATH}}")
+frost sign finalize --preview-finalize --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["alice"])} "${{SESSION_ID}}"
+""",
+            commentary=(
+                "Alice collects signature shares, aggregates the signature, and dispatches finalize packages; "
+                "prints a preview of one finalize message."
+            ),
+        )
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 

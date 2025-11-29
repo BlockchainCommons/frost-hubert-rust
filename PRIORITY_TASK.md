@@ -27,6 +27,13 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
    - `respond`: Participants run part3, produce key/public key packages, persist them, and return finalize response
    - `collect`: Coordinator collects finalize responses, writes `collected_finalize.json`, clears pending requests, and reports the group verifying key (`SigningPublicKey::Ed25519`, UR form `ur:signing-public-key`)
 
+6. **Signing (in progress)**
+   - `sign start` (coordinator): builds session, per-participant ARIDs (commit/share), target envelope, and posts signCommit requests
+   - `sign receive` (participant): decrypts/validates signCommit, shows participants/target, persists session state + commit response ARID
+   - `sign commit` (participant): generates nonces/commitments, posts signCommitResponse with next-hop share ARID, persists part1 state, updates listening ARID
+   - `sign collect` (coordinator): collects all commitments, stores `commitments.json`, and dispatches per-participant signShare requests
+   - `sign share` (participant): fetches signShare, validates session/commitments, produces signature share, posts to share ARID, and persists `share.json`
+
 6. **Storage Backends**
    - Hubert server (HTTP)
    - Mainline DHT
@@ -43,12 +50,11 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
    - Coordinator sends finalize requests
    - Participants post finalize responses
    - Coordinator collects finalize responses and outputs the group verifying key
-   - Signing: builds a sample target envelope, previews `sign start` (signCommit) unsealed, and posts it to Hubert
-   - Signing: participants now capture the session ID from `sign receive` output, use it for `sign commit`, and coordinator previews signShare during collect
+   - Signing: builds a sample target envelope, previews `sign start` (signCommit), posts it, participants run signReceive/signCommit, coordinator runs signCollect and posts signShare requests, participants preview/post signShare responses
 
 ## Where the Demo Stops (current)
 
-The `demo-log.md` now runs through finalize collect. Each participant has:
+The `demo-log.md` now runs through finalize collect and participant signShare responses (no sign finish yet). Each participant has:
 - `registry.json` - Group membership, pending_requests (Round 2), updated `listening_at_arid` for finalize
 - `group-state/<group-id>/round1_secret.json` - Round 1 secret (participants only)
 - `group-state/<group-id>/round1_package.json` - Round 1 package (participants only)
@@ -58,6 +64,9 @@ The `demo-log.md` now runs through finalize collect. Each participant has:
 - Finalize requests sent and participants respond with key/public key packages
 - `group-state/<group-id>/collected_finalize.json` - Finalize responses; coordinator prints group verifying key (`ur:signing-public-key/...`)
 - Registry now also records `verifying_key` (UR) for both coordinator and participants after finalize respond/collect
+- Signing state:
+  - Coordinator: `signing/<session>/start.json`, `commitments.json`
+  - Participants: `signing/<session>/sign_receive.json`, `commit.json`, `share.json`
 
 ## Next Steps (Priority Order)
 
@@ -67,7 +76,9 @@ The `demo-log.md` now runs through finalize collect. Each participant has:
   - `frost sign start` (coordinator) with first-hop ARID, per-participant commit/share ARIDs, full target envelope, preview and Hubert post. Coordinator is no longer auto-added to the participant list; only actual signers are targeted.
   - `frost sign receive` (participant viewer): fetches/decrypts signCommit, validates sender/group/session/minSigners, shows sorted participants (lexicographic XID), formatted target envelope, persists request details (`sign_receive.json`) including response ARID for follow-up commands; no ARID printed to user (write-once).
   - `frost sign commit` (participant respond): uses persisted `sign_receive.json` (no Hubert re-fetch), supports `--preview` dry-run, optional `--reject`, derives commitments + next-hop share ARID, posts to coordinator’s commit ARID, and persists part1 state. Response body omits redundant participant field. Coordinator doc is resolved from the registry for encryption.
-- Pending: `frost sign collect`, `frost sign share`, `frost sign finish`.
+- `frost sign collect` (coordinator): aggregates commitments, persists `commitments.json`, dispatches sealed signShare requests (with `--preview-share` option).
+- `frost sign share` (participant): retrieves signShare from listening ARID, validates session/minSigners/commitments/target digest from local state, posts signature share, persists `share.json`, clears listening ARID.
+- Pending: `frost sign finish`.
 
 1) ✅ **`frost sign start` (coordinator)**
    - Inputs: group ID; target envelope (assumed already wrapped as needed).
@@ -102,15 +113,18 @@ The `demo-log.md` now runs through finalize collect. Each participant has:
    - `--preview-share` prints one unsealed signShare request during collect.
    - Redundant fields removed: signShare carries only session, response_arid, and commitments (no group/minSigners/targetDigest).
 
-5) **`frost sign share` (participant)**
-   - Fetch “signShare” request from `listening_at_arid`.
-   - Validate group/session IDs; run FROST signing part2 to produce signature share using stored part1 state and aggregated commitments.
-   - Generate next `response_arid` (if further interaction needed; otherwise omit) and post GSTP response with signature share to coordinator’s share-collection ARID. Persist share under `group-state/<group-id>/signing/<session-id>/share.json`. Clear `listening_at_arid` when done.
+5) ✅ **`frost sign share` (participant)**
+   - Fetches signShare from `listening_at_arid`, validates session/minSigners/participants against persisted receive state, checks commitments against stored part1 values, builds signing package from the persisted target digest, and posts a signature share to the provided share ARID.
+   - Persists `share.json` (signature share + commitments + finalize ARID) and sets `listening_at_arid` for the finalize hop.
 
-6) **`frost sign finish` (coordinator)**
-   - Collect all signature shares from the share-collection ARID; validate.
-   - Aggregate to final `Signature::Ed25519`.
-   - Persist final signature and session transcript under `group-state/<group-id>/signing/<session-id>/final.json`; print UR form for the signature. Any participant can attach it as `'signed': Signature` to the target envelope (CBOR `Signature(...)` in envelopes).
+6) ✅ **`frost sign finalize` (coordinator)**
+   - Collect all signature shares from the share-collection ARID; validate and aggregate to the final `Signature::Ed25519`.
+   - Verify the aggregated signature against the target digest and by attaching it to the target envelope with the group verifying key; abort if verification fails.
+   - Persist final signature and session transcript under `group-state/<group-id>/signing/<session-id>/final.json`; print the `ur:signature/...` once after dispatch.
+   - Post per-participant finalize packages (sealed to each participant’s provided ARID from signShareResponse) containing session ID and the signature shares needed for participants to independently recompute the signature (no aggregated signature sent).
+
+7) **`frost sign attach` (participant)**
+   - Fetch finalize package from personal ARID, reconstruct/verify the group signature using persisted session state plus provided shares/commitments, persist/print signature, attach it to the target envelope and verify locally using the group verifying key.
 
 **General patterns reused from DKG:**
 - ARID flow naming: `send_to_arid` (where coordinator posts), `collect_from_arid` (where coordinator polls), participant `response_arid`, local `listening_at_arid`.
@@ -166,21 +180,24 @@ The pattern is established:
 - Avoid redundant fields: signShare drops group/minSigners/targetDigest; signCommitResponse drops group/targetDigest. Participants enforce invariants from the signed start state instead.
 - Always transmit the literal target envelope, not a UR wrapper; digest validation relies on the envelope itself.
 - `--no-envelope` was removed from receive flows; outputs now include info plus the bare session line for scripting.
+- Signature share responses no longer echo `targetDigest`; session ID + persisted state already bind the target.
+- Finalize packages to participants exclude the aggregated signature; participants recompute locally using provided shares. Coordinator verifies the aggregated signature on the target before dispatch and prints the UR after sends.
 
 ### Next Steps
 
-- Implement `frost sign share` (participant) with validation of minSigners/target digest from persisted start state and signShare payload; post signature shares to share_arid.
-- Implement `frost sign finish` (coordinator) to collect signature shares, aggregate the signature, persist/print signature UR, and attach to the target envelope.
-- Add integration coverage for signShare/signFinish, including failure cases (threshold mismatch, stale/incorrect session).
+- Extend `signShareResponse` to include a per-participant `response_arid` for the final hop so the coordinator can return aggregation material. ✅
+- Replace `frost sign finish` with `frost sign finalize` (coordinator): collect shares, verify/aggregate the joint signature, and post per-participant finalize packages (sealed) back to the `response_arid`, containing the session ID plus the commitments/signature shares needed for participants to deterministically recompute the signature (do not re-send target details already bound to the session). ✅
+- Add a participant finalize command (`sign attach`) to fetch the finalize package, recompute/verify the signature locally using persisted session state + provided shares/commitments, persist/print the signature, and attach to the target envelope; add demo coverage.
+- Add integration coverage for signShare/signFinalize, including failure cases (threshold mismatch, stale/incorrect session).
 
 ### Test Coverage
 
 Add integration tests for:
 - Round 2 message construction and distribution
 - Finalize collect and group verifying key handling
-- End-to-end signing flow
+- End-to-end signing flow (commit/share/finish)
 
 ### Demo Script Updates
 
-- Demo now includes Round 2 collect, finalize send/respond/collect, and prints the group verifying key.
-- Next: extend `frost-demo.py` to cover the forthcoming signing flow once implemented.
+- Demo now includes Round 2 collect, finalize send/respond/collect, group verifying key, and participant signShare responses.
+- Next: extend `frost-demo.py` to cover sign finish once implemented.

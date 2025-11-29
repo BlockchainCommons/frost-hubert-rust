@@ -1,6 +1,8 @@
 pub mod collect;
 pub mod commit;
+pub mod finalize;
 pub mod receive;
+pub mod share;
 pub mod start;
 
 use anyhow::Result;
@@ -24,6 +26,10 @@ enum Commands {
     Commit(commit::CommandArgs),
     /// Collect signCommit responses and send signShare requests (coordinator)
     Collect(collect::CommandArgs),
+    /// Respond to a signShare request with a signature share (participant)
+    Share(share::CommandArgs),
+    /// Collect signature shares and fan out finalize packages (coordinator)
+    Finalize(finalize::CommandArgs),
 }
 
 impl CommandArgs {
@@ -33,6 +39,8 @@ impl CommandArgs {
             Commands::Receive(args) => args.exec(),
             Commands::Commit(args) => args.exec(),
             Commands::Collect(args) => args.exec(),
+            Commands::Share(args) => args.exec(),
+            Commands::Finalize(args) => args.exec(),
         }
     }
 }

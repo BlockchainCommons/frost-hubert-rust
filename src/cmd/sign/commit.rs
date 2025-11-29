@@ -299,13 +299,12 @@ fn load_receive_state(
                 let entry = entry?;
                 if entry.file_type()?.is_dir() {
                     let dir_name = entry.file_name();
-                    if let Some(name) = dir_name.to_str() {
-                        if name.len() == 64
-                            && name.chars().all(|c| c.is_ascii_hexdigit())
-                        {
-                            let group_id = ARID::from_hex(name);
-                            dirs.push((group_id, entry.path()));
-                        }
+                    if let Some(name) = dir_name.to_str()
+                        && name.len() == 64
+                        && name.chars().all(|c| c.is_ascii_hexdigit())
+                    {
+                        let group_id = ARID::from_hex(name);
+                        dirs.push((group_id, entry.path()));
                     }
                 }
             }
@@ -407,6 +406,7 @@ fn load_receive_state(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn persist_commit_state(
     registry_path: &Path,
     group_id: &ARID,
