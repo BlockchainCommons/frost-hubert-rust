@@ -1091,6 +1091,53 @@ frost sign finalize --preview-finalize --verbose --storage $STORAGE --timeout $T
             ),
         )
 
+        run_step(
+            shell,
+            "Bob attaches aggregated signature",
+            f"""
+BOB_ATTACH=$(frost sign attach --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_SESSION_ID}}")
+echo "${{BOB_ATTACH}}"
+BOB_SIGNED=$(echo "${{BOB_ATTACH}}" | tail -n1)
+echo "${{BOB_SIGNED}}" | envelope format
+""",
+            commentary=(
+                "Bob fetches his finalize package, rebuilds the aggregated signature locally, "
+                "attaches it to the target envelope, and formats the signed result."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Carol attaches aggregated signature",
+            f"""
+frost sign attach --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{CAROL_SESSION_ID}}"
+""",
+            commentary=(
+                "Carol retrieves her finalize package and attaches the verified group signature."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Dan attaches aggregated signature",
+            f"""
+frost sign attach --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{DAN_SESSION_ID}}"
+""",
+            commentary=(
+                "Dan rebuilds and verifies the signature from his finalize package."
+            ),
+        )
+
+        run_step(
+            shell,
+            "Inspecting Bob's final signature state",
+            f"""
+FINAL_PATH=$(ls -t {qp(PARTICIPANT_DIRS["bob"])}/group-state/*/signing/*/final.json | head -n1)
+jq . "${{FINAL_PATH}}"
+""",
+            commentary="Persisted aggregated signature, signature shares, and signed target UR for Bob.",
+        )
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 

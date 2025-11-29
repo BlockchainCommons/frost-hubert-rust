@@ -1,3 +1,4 @@
+pub mod attach;
 pub mod collect;
 pub mod commit;
 pub mod finalize;
@@ -30,6 +31,8 @@ enum Commands {
     Share(share::CommandArgs),
     /// Collect signature shares and fan out finalize packages (coordinator)
     Finalize(finalize::CommandArgs),
+    /// Attach a finalized signature to the target envelope (participant)
+    Attach(attach::CommandArgs),
 }
 
 impl CommandArgs {
@@ -41,6 +44,7 @@ impl CommandArgs {
             Commands::Collect(args) => args.exec(),
             Commands::Share(args) => args.exec(),
             Commands::Finalize(args) => args.exec(),
+            Commands::Attach(args) => args.exec(),
         }
     }
 }

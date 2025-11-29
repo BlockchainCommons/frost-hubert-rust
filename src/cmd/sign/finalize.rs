@@ -190,6 +190,7 @@ impl CommandArgs {
             })?;
         let final_signature =
             bc_components::Signature::ed25519_from_data(sig_array);
+        let signature_ur = final_signature.ur_string();
         if !verifying_key.verify(&final_signature, target_digest.data()) {
             bail!(
                 "Aggregated signature failed verification against target digest"
@@ -207,6 +208,7 @@ impl CommandArgs {
             .context(
                 "Aggregated signature did not verify on target envelope",
             )?;
+        let signed_envelope_ur = signed_envelope.ur_string();
 
         persist_final_state(
             &registry_path,
@@ -217,14 +219,6 @@ impl CommandArgs {
             &finalize_arids,
         )?;
 
-        let sig_bytes_vec = signature.serialize()?;
-        let sig_array: [u8; 64] =
-            sig_bytes_vec.as_slice().try_into().map_err(|_| {
-                anyhow::anyhow!("Aggregated signature is not 64 bytes")
-            })?;
-        let final_signature =
-            bc_components::Signature::ed25519_from_data(sig_array);
-
         if is_verbose() {
             eprintln!();
             eprintln!(
@@ -234,18 +228,6 @@ impl CommandArgs {
             );
             eprintln!("Signature verified against target and group key.");
         }
-
-        // Attach and verify on the target envelope (already validated above)
-        let signed_envelope = Envelope::from_ur_string(&start_state.target_ur)?
-            .add_assertion(
-                bc_envelope::known_values::SIGNED,
-                final_signature.clone(),
-            );
-        signed_envelope
-            .verify_signature_from(&verifying_key)
-            .context(
-                "Aggregated signature did not verify on target envelope",
-            )?;
 
         // Dispatch finalize packages to participants
         let signer_keys = owner
@@ -308,8 +290,9 @@ impl CommandArgs {
                 .block_on(async { client.put(finalize_arid, &sealed).await })?;
         }
 
-        // Print the final signature UR after all dispatches
-        println!("{}", final_signature.ur_string());
+        // Print the final signature and signed envelope UR after all dispatches
+        println!("{signature_ur}");
+        println!("{signed_envelope_ur}");
 
         Ok(())
     }
