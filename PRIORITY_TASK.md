@@ -17,14 +17,13 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
 3. **DKG Round 1** (`frost dkg coordinator round1`)
    - Coordinator fetches all participant responses from Hubert, validates GSTP responses, extracts Round 1 packages, saves to `collected_round1.json`, and posts individualized Round 2 requests (with optional preview)
 
-4. **DKG Round 2** (`frost dkg coordinator round2 collect` / `frost dkg participant round2`)
+4. **DKG Round 2** (`frost dkg coordinator round2` / `frost dkg participant round2`)
    - `respond`: Participants respond with round2 packages, persist round2 secret, include next `response_arid`, and update `listening_at_arid`
-   - `collect`: Coordinator fetches/validates Round 2 responses, saves `collected_round2.json`, and updates pending_requests for finalize phase
+   - Coordinator: Fetches/validates Round 2 responses, saves `collected_round2.json`, and immediately posts finalize requests to each participant (combined collect + finalize dispatch)
 
 5. **DKG Finalize** (`frost dkg coordinator finalize` / `frost dkg participant finalize`)
-   - `send`: Coordinator distributes collected Round 2 packages to each participant (with new `responseArid` for finalize respond)
    - `respond`: Participants run part3, produce key/public key packages, persist them, and return finalize response
-   - `collect`: Coordinator collects finalize responses, writes `collected_finalize.json`, clears pending requests, and reports the group verifying key (`SigningPublicKey::Ed25519`, UR form `ur:signing-public-key`)
+   - Coordinator: Collects finalize responses, writes `collected_finalize.json`, clears pending requests, and reports the group verifying key (`SigningPublicKey::Ed25519`, UR form `ur:signing-public-key`)
 
 6. **Signing (in progress)**
    - `sign start` (coordinator): builds session, per-participant ARIDs (commit/share), target envelope, and posts signCommit requests
@@ -44,8 +43,7 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
    - Builds registries
    - Creates and responds to DKG invites via Hubert
    - Coordinator collects Round 1 packages and dispatches Round 2 requests
-   - Coordinator collects Round 2 responses
-   - Coordinator sends finalize requests
+   - Coordinator collects Round 2 responses and dispatches finalize requests (combined command)
    - Participants post finalize responses
    - Coordinator collects finalize responses and outputs the group verifying key
    - Signing: builds a sample target envelope, previews `sign start` (signCommit), posts it, participants run signReceive/signCommit, coordinator runs signCollect and posts signShare requests, participants preview/post signShare responses

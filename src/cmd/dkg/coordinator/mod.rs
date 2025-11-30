@@ -20,9 +20,9 @@ enum Commands {
     Invite(invite::CommandArgs),
     /// DKG Round 1 collection and Round 2 dispatch
     Round1(round1::CommandArgs),
-    /// DKG Round 2 collection operations
+    /// DKG Round 2 collection and finalize dispatch
     Round2(round2::CommandArgs),
-    /// DKG finalize operations
+    /// DKG finalize response collection
     Finalize(finalize::CommandArgs),
 }
 

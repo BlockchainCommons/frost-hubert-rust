@@ -713,14 +713,20 @@ frost dkg participant round2 --verbose --storage $STORAGE --timeout $TIMEOUT --r
 
         run_step(
             shell,
-            "Alice collects Round 2 responses",
+            "Alice collects Round 2 responses and sends finalize packages",
             f"""
+# Get the group ID from Alice's registry
 ALICE_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["alice"])})
-frost dkg coordinator round2 collect --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["alice"])} "${{ALICE_GROUP_ID}}"
+echo "Group ID: ${{ALICE_GROUP_ID}}"
+
+# Collect Round 2 responses and dispatch finalize (with a preview of one request)
+ROUND2_PREVIEW=$(frost dkg coordinator round2 --preview --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["alice"])} "${{ALICE_GROUP_ID}}" | tee /dev/stderr | tail -n1)
+echo "${{ROUND2_PREVIEW}}" | envelope format
 """,
             commentary=(
-                "Alice fetches Round 2 responses from Hubert, validates them, saves collected packages, "
-                "and records each participant's next response ARID for the finalize phase."
+                "Alice fetches each participant's Round 2 response from Hubert, "
+                "saves the Round 2 packages, and immediately posts finalize requests. "
+                "One finalize request is previewed while posting."
             ),
         )
 
@@ -731,33 +737,6 @@ frost dkg coordinator round2 collect --verbose --storage $STORAGE --timeout $TIM
 jq . {qp(PARTICIPANT_DIRS["alice"])}/group-state/*/collected_round2.json
 """,
             commentary="Collected Round 2 packages with each sender's next response ARID.",
-        )
-
-        # ── DKG Finalize send (distribution of round2 packages) ─────────────
-
-        run_step(
-            shell,
-            "Alice composes a preview finalize request (for first participant)",
-            f"""
-FINALIZE_PREVIEW=$(frost dkg coordinator finalize send --preview --registry {qp(REGISTRIES["alice"])} "${{ALICE_GROUP_ID}}")
-echo "${{FINALIZE_PREVIEW}}" | envelope format
-""",
-            commentary=(
-                "Preview the finalize request structure that delivers incoming Round 2 packages "
-                "to a participant along with their responseArid for finalize respond."
-            ),
-        )
-
-        run_step(
-            shell,
-            "Alice sends finalize packages to each participant",
-            f"""
-frost dkg coordinator finalize send --verbose --storage $STORAGE --registry {qp(REGISTRIES["alice"])} "${{ALICE_GROUP_ID}}"
-""",
-            commentary=(
-                "Alice posts the finalize requests (with each participant's incoming Round 2 packages) "
-                "to the ARIDs provided in Round 2 collect."
-            ),
         )
 
         # ── Participants respond to finalize ──────────────────────────────
@@ -809,7 +788,7 @@ frost dkg participant finalize respond --verbose --storage $STORAGE --timeout $T
             "Alice collects finalize responses",
             f"""
 ALICE_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["alice"])})
-frost dkg coordinator finalize collect --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["alice"])} "${{ALICE_GROUP_ID}}"
+frost dkg coordinator finalize --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["alice"])} "${{ALICE_GROUP_ID}}"
 """,
             commentary=(
                 "Alice fetches all finalize responses, validates them, saves collected "
