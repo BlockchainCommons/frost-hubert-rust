@@ -26,8 +26,8 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
    - Coordinator: Collects finalize responses, writes `collected_finalize.json`, clears pending requests, and reports the group verifying key (`SigningPublicKey::Ed25519`, UR form `ur:signing-public-key`)
 
 6. **Signing (in progress)**
-   - `sign invite` (coordinator): builds session, per-participant ARIDs (commit/share), target envelope, and posts signCommit requests
-   - `sign receive` (participant): decrypts/validates signCommit, shows participants/target, persists session state + commit response ARID
+   - `sign invite` (coordinator): builds session, per-participant ARIDs (commit/share), target envelope, and posts signInvite requests
+   - `sign receive` (participant): decrypts/validates signInvite, shows participants/target, persists session state + commit response ARID
    - `sign commit` (participant): generates nonces/commitments, posts signCommitResponse with next-hop share ARID, persists part1 state, updates listening ARID
    - `sign collect` (coordinator): collects all commitments, stores `commitments.json`, and dispatches per-participant signShare requests
    - `sign share` (participant): fetches signShare, validates session/commitments, produces signature share, posts to share ARID, and persists `share.json`
@@ -46,7 +46,7 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
    - Coordinator collects Round 2 responses and dispatches finalize requests (combined command)
    - Participants post finalize responses
    - Coordinator collects finalize responses and outputs the group verifying key
-   - Signing: builds a sample target envelope, previews `sign invite` (signCommit), posts it, participants run signReceive/signCommit, coordinator runs signCollect and posts signShare requests, participants preview/post signShare responses
+   - Signing: builds a sample target envelope, previews `sign invite` (signInvite), posts it, participants run signReceive/signInvite, coordinator runs signCollect and posts signShare requests, participants preview/post signShare responses
 
 ## Where the Demo Stops (current)
 
@@ -70,7 +70,7 @@ The `demo-log.md` now runs through finalize collect and participant signShare re
 
 - Implemented:
    - `frost sign coordinator start` (coordinator) with first-hop ARID, per-participant commit/share ARIDs, full target envelope, preview and Hubert post. Coordinator is no longer auto-added to the participant list; only actual signers are targeted.
-   - `frost sign participant receive` (participant viewer): fetches/decrypts signCommit, validates sender/group/session/minSigners, shows sorted participants (lexicographic XID), formatted target envelope, persists request details (`sign_receive.json`) including response ARID for follow-up commands; no ARID printed to user (write-once).
+   - `frost sign participant receive` (participant viewer): fetches/decrypts signInvite, validates sender/group/session/minSigners, shows sorted participants (lexicographic XID), formatted target envelope, persists request details (`sign_receive.json`) including response ARID for follow-up commands; no ARID printed to user (write-once).
    - `frost sign participant round1` (participant respond): uses persisted `sign_receive.json` (no Hubert re-fetch), supports `--preview` dry-run, optional `--reject`, derives commitments + next-hop share ARID, posts to coordinator’s commit ARID, and persists part1 state. Response body omits redundant participant field. Coordinator doc is resolved from the registry for encryption.
    - `frost sign coordinator round1` (coordinator): aggregates commitments, persists `commitments.json`, dispatches sealed signShare requests (with `--preview-share` option).
    - `frost sign participant round2` (participant): retrieves signShare from listening ARID, validates session/minSigners/commitments/target digest from local state, posts signature share, persists `share.json`, clears listening ARID.

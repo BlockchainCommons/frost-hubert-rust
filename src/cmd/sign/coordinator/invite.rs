@@ -132,7 +132,7 @@ impl CommandArgs {
         let valid_until =
             Date::with_duration_from_now(Duration::from_secs(60 * 60));
         let mut request = SealedRequest::new(
-            "signCommit",
+            "signInvite",
             session_id,
             owner.xid_document().clone(),
         )
@@ -249,7 +249,7 @@ impl CommandArgs {
 
         if is_verbose() {
             eprintln!(
-                "Posting signCommit request to {}",
+                "Posting signInvite request to {}",
                 start_arid.ur_string()
             );
         }

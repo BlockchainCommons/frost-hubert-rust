@@ -26,7 +26,7 @@ use crate::{
     registry::Registry,
 };
 
-/// Respond to a signCommit request (participant).
+/// Respond to a signInvite request (participant).
 #[derive(Debug, Parser)]
 #[group(skip)]
 pub struct CommandArgs {
@@ -41,7 +41,7 @@ pub struct CommandArgs {
     #[arg(long = "preview")]
     preview: bool,
 
-    /// Reject the signCommit request with the provided reason
+    /// Reject the signInvite request with the provided reason
     #[arg(long = "reject", value_name = "REASON")]
     reject_reason: Option<String>,
 
@@ -108,7 +108,7 @@ impl CommandArgs {
             owner_keys,
         )?;
 
-        if sealed_request.function() != &Function::from("signCommit") {
+        if sealed_request.function() != &Function::from("signInvite") {
             bail!("Unexpected request function: {}", sealed_request.function());
         }
 
@@ -132,7 +132,7 @@ impl CommandArgs {
 
         if !receive_state.participants.contains(&owner.xid()) {
             bail!(
-                "Persisted signCommit request does not include this participant"
+                "Persisted signInvite request does not include this participant"
             );
         }
 
@@ -245,7 +245,7 @@ impl CommandArgs {
 
         if is_verbose() {
             eprintln!(
-                "Posting signCommit response to {}",
+                "Posting signInvite response to {}",
                 receive_state.response_arid.ur_string()
             );
         }

@@ -25,7 +25,7 @@ use crate::{
     registry::Registry,
 };
 
-/// Inspect a signCommit request (participant).
+/// Inspect a signInvite request (participant).
 #[derive(Debug, Parser)]
 #[group(skip)]
 pub struct CommandArgs {
@@ -49,7 +49,7 @@ pub struct CommandArgs {
     #[arg(long = "sender", value_name = "SENDER")]
     sender: Option<String>,
 
-    /// signCommit request ARID or envelope (ur:arid or ur:envelope)
+    /// signInvite request ARID or envelope (ur:arid or ur:envelope)
     #[arg(value_name = "REQUEST")]
     request: String,
 }
@@ -118,7 +118,7 @@ impl CommandArgs {
         }
 
         // Validate function
-        if sealed_request.function() != &Function::from("signCommit") {
+        if sealed_request.function() != &Function::from("signInvite") {
             bail!("Unexpected request function: {}", sealed_request.function());
         }
 
@@ -126,7 +126,7 @@ impl CommandArgs {
         let valid_until: Date =
             sealed_request.extract_object_for_parameter("validUntil")?;
         if valid_until <= now {
-            bail!("signCommit request has expired");
+            bail!("signInvite request has expired");
         }
 
         let group_id: ARID =
@@ -155,7 +155,7 @@ impl CommandArgs {
         }
 
         if participants.is_empty() {
-            bail!("signCommit request contains no participants");
+            bail!("signInvite request contains no participants");
         }
         if min_signers < 2 {
             bail!("minSigners must be at least 2");
@@ -164,10 +164,10 @@ impl CommandArgs {
             bail!("minSigners exceeds participant count");
         }
         if !participants.contains(&owner.xid()) {
-            bail!("signCommit request does not include this participant");
+            bail!("signInvite request does not include this participant");
         }
         let response_arid = response_arid
-            .context("signCommit request missing response ARID")?;
+            .context("signInvite request missing response ARID")?;
 
         participants.sort();
 
@@ -242,7 +242,7 @@ impl CommandArgs {
             state_dir.join("sign_receive.json"),
             serde_json::to_vec_pretty(&root)?,
         )
-        .context("Failed to persist signCommit request details")?;
+        .context("Failed to persist signInvite request details")?;
 
         Ok(())
     }
@@ -261,7 +261,7 @@ fn resolve_sign_request(
                 client
                     .get(&arid, timeout)
                     .await?
-                    .context("signCommit request not found in Hubert storage")
+                    .context("signInvite request not found in Hubert storage")
             });
         }
         if timeout.is_some() {

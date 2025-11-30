@@ -131,7 +131,7 @@ impl CommandArgs {
 
         if commit_state.target_ur != receive_state.target_ur {
             bail!(
-                "Target envelope in commit state does not match persisted signCommit request"
+                "Target envelope in commit state does not match persisted signInvite request"
             );
         }
 

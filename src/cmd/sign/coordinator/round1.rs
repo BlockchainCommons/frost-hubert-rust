@@ -24,7 +24,7 @@ use crate::{
     registry::Registry,
 };
 
-/// Collect signCommit responses and dispatch signShare requests (coordinator).
+/// Collect signInvite responses and dispatch signShare requests (coordinator).
 #[derive(Debug, Parser)]
 #[group(skip)]
 pub struct CommandArgs {
@@ -83,7 +83,7 @@ impl CommandArgs {
 
         if group_record.coordinator().xid() != &owner.xid() {
             bail!(
-                "Only the coordinator can collect signCommit responses. \
+                "Only the coordinator can collect signInvite responses. \
                  Coordinator: {}, Owner: {}",
                 group_record.coordinator().xid().ur_string(),
                 owner.xid().ur_string()
@@ -92,7 +92,7 @@ impl CommandArgs {
 
         if is_verbose() {
             eprintln!(
-                "Collecting signCommit responses for session {} from {} participants...",
+                "Collecting signInvite responses for session {} from {} participants...",
                 session_id.ur_string(),
                 start_state.participants.len()
             );
@@ -153,7 +153,7 @@ impl CommandArgs {
                 .filter(|xid| !commitments.contains_key(*xid))
                 .map(|xid| xid.ur_string())
                 .collect();
-            bail!("Missing signCommit responses from: {}", missing.join(", "));
+            bail!("Missing signInvite responses from: {}", missing.join(", "));
         }
 
         // Persist aggregated commitments for this session
@@ -288,7 +288,7 @@ impl CommandArgs {
         if is_verbose() {
             eprintln!();
             eprintln!(
-                "Collected {} signCommit responses. Saved to {}",
+                "Collected {} signInvite responses. Saved to {}",
                 commitments.len(),
                 display_path.display()
             );
@@ -346,7 +346,7 @@ fn fetch_commit_response(
             .ok()
             .and_then(|e| e.extract_subject::<String>().ok())
             .unwrap_or_else(|| "unknown reason".to_string());
-        bail!("Participant rejected signCommit: {}", reason);
+        bail!("Participant rejected signInvite: {}", reason);
     }
 
     let result = sealed_response

@@ -105,20 +105,20 @@ sequenceDiagram
     actor D as Dan
 
     note over A: sign coordinator invite
-    A->>H: signCommit(B, C, D)
+    A->>H: signInvite(B, C, D)
     A->>S: invite ARID
     S->>B: invite ARID
     S->>C: invite ARID
     S->>D: invite ARID
 
     note over B: sign participant receive
-    H->>B: signCommit(B, C, D)
+    H->>B: signInvite(B, C, D)
 
     note over C: sign participant receive
-    H->>C: signCommit(B, C, D)
+    H->>C: signInvite(B, C, D)
 
     note over D: sign participant receive
-    H->>D: signCommit(B, C, D)
+    H->>D: signInvite(B, C, D)
 
     note over B: sign participant round1
     B->>H: signCommitResponse(B)

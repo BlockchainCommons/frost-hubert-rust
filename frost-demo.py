@@ -839,109 +839,109 @@ envelope format < {qp(SIGN_TARGET)}
 
         run_step(
             shell,
-            "Preview signCommit request (unsealed)",
+            "Preview signInvite request (unsealed)",
             f"""
 ALICE_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["alice"])})
 frost sign coordinator invite --preview --target {qp(SIGN_TARGET)} --registry {qp(REGISTRIES["alice"])} "${{ALICE_GROUP_ID}}" | envelope format
 """,
             commentary=(
-                "Preview the unsealed signCommit GSTP request (initial signing hop)."
+                "Preview the unsealed signInvite GSTP request (initial signing hop)."
             ),
         )
 
         run_step(
             shell,
-            "Post signCommit request to Hubert",
+            "Post signInvite request to Hubert",
             f"""
 ALICE_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["alice"])})
 ALICE_SIGN_START_ARID=$(frost sign coordinator invite --verbose --storage $STORAGE --registry {qp(REGISTRIES["alice"])} --target {qp(SIGN_TARGET)} "${{ALICE_GROUP_ID}}")
 echo "${{ALICE_SIGN_START_ARID}}"
 """,
             commentary=(
-                "Coordinator posts the signCommit request to a single first-hop ARID (printed)."
+                "Coordinator posts the signInvite request to a single first-hop ARID (printed)."
             ),
         )
 
         run_step(
             shell,
-            "Bob inspects signCommit request",
+            "Bob inspects signInvite request",
             f"""
 START_PATH=$(ls -t demo/alice/group-state/*/signing/*/start.json | head -n1)
 ALICE_SIGN_START_ARID=$(jq -r '.start_arid' "${{START_PATH}}")
 BOB_SESSION_ID=$(frost sign participant receive --info --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{ALICE_SIGN_START_ARID}}" | tee /dev/stderr | tail -n1)
 """,
             commentary=(
-                "Bob fetches and decrypts the signCommit request via Hubert and views the details of the session."
+                "Bob fetches and decrypts the signInvite request via Hubert and views the details of the session."
             ),
         )
 
         run_step(
             shell,
-            "Carol inspects signCommit request",
+            "Carol inspects signInvite request",
             f"""
 START_PATH=$(ls -t demo/alice/group-state/*/signing/*/start.json | head -n1)
 ALICE_SIGN_START_ARID=$(jq -r '.start_arid' "${{START_PATH}}")
 CAROL_SESSION_ID=$(frost sign participant receive --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{ALICE_SIGN_START_ARID}}" | tee /dev/stderr | tail -n1)
 """,
             commentary=(
-                "Carol fetches and decrypts the signCommit request via Hubert."
+                "Carol fetches and decrypts the signInvite request via Hubert."
             ),
         )
 
         run_step(
             shell,
-            "Dan inspects signCommit request",
+            "Dan inspects signInvite request",
             f"""
 START_PATH=$(ls -t demo/alice/group-state/*/signing/*/start.json | head -n1)
 ALICE_SIGN_START_ARID=$(jq -r '.start_arid' "${{START_PATH}}")
 DAN_SESSION_ID=$(frost sign participant receive --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{ALICE_SIGN_START_ARID}}" | tee /dev/stderr | tail -n1)
 """,
             commentary=(
-                "Dan fetches and decrypts the signCommit request via Hubert."
+                "Dan fetches and decrypts the signInvite request via Hubert."
             ),
         )
 
         run_step(
             shell,
-            "Bob previews signCommit response",
+            "Bob previews signInvite response",
             f"""
 frost sign participant round1 --preview --registry {qp(REGISTRIES["bob"])} "${{BOB_SESSION_ID}}" | envelope format
 """,
             commentary=(
-                "Bob dry-runs his signCommit response, showing commitments and next-hop response ARID without posting."
+                "Bob dry-runs his signInvite response, showing commitments and next-hop response ARID without posting."
             ),
         )
 
         run_step(
             shell,
-            "Bob posts signCommit response",
+            "Bob posts signInvite response",
             f"""
 frost sign participant round1 --verbose --storage $STORAGE --registry {qp(REGISTRIES["bob"])} "${{BOB_SESSION_ID}}"
 """,
             commentary=(
-                "Bob posts his signCommit response to the coordinator."
+                "Bob posts his signInvite response to the coordinator."
             ),
         )
 
         run_step(
             shell,
-            "Carol posts signCommit response",
+            "Carol posts signInvite response",
             f"""
 frost sign participant round1 --storage $STORAGE --registry {qp(REGISTRIES["carol"])} "${{CAROL_SESSION_ID}}"
 """,
             commentary=(
-                "Carol posts her signCommit response to the coordinator."
+                "Carol posts her signInvite response to the coordinator."
             ),
         )
 
         run_step(
             shell,
-            "Dan posts signCommit response",
+            "Dan posts signInvite response",
             f"""
 frost sign participant round1 --storage $STORAGE --registry {qp(REGISTRIES["dan"])} "${{DAN_SESSION_ID}}"
 """,
             commentary=(
-                "Dan posts his signCommit response to the coordinator."
+                "Dan posts his signInvite response to the coordinator."
             ),
         )
 
@@ -954,7 +954,7 @@ SESSION_ID=$(jq -r '.session_id' "${{START_PATH}}")
 frost sign coordinator round1 --preview-share --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["alice"])} "${{SESSION_ID}}"
 """,
             commentary=(
-                "Alice gathers the signCommit responses, aggregates commitments, sends per-participant signShare "
+                "Alice gathers the signInvite responses, aggregates commitments, sends per-participant signShare "
                 "requests, and tells participants where to post their signature shares (share ARIDs)."
             ),
         )
