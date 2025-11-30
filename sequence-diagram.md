@@ -73,10 +73,8 @@ sequenceDiagram
     H->>D: dkgRound2(D)
     D->>H: dkgRound2Response(D)
 
-    note over A: dkg coordinator round2 collect
+    note over A: dkg coordinator round2
     H->>A: dkgRound2Response(B)<br/>dkgRound2Response(C)<br/>dkgRound2Response(D)
-
-    note over A: dkg coordinator finalize send
     A->>H: dkgFinalize(B)<br/>dkgFinalize(C)<br/>dkgFinalize(D)
 
     note over B: dkg participant finalize respond
@@ -91,7 +89,7 @@ sequenceDiagram
     H->>D: dkgFinalize(D)
     D->>H: dkgFinalizeResponse(D)
 
-    note over A: dkg coordinator finalize collect
+    note over A: dkg coordinator finalize
     H->>A: dkgFinalizeResponse(B)<br/>dkgFinalizeResponse(C)<br/>dkgFinalizeResponse(D)
 ```
 
