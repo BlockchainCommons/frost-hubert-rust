@@ -2,6 +2,8 @@
 
 Always read this *entire* file before working in this crate.
 
+The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized Schnorr Threshold) participants. Current functionality:
+
 ## General Guidelines
 
 - This crate is unreleased *de novo* development. Don't concern yourself with backward compatibility yet.
@@ -66,3 +68,51 @@ Always read this *entire* file before working in this crate.
 
 - `frost-demo.py` generates `demo-log.md`. When you enhance the tool, consider enhancing the `frost-demo.py` script to reflect those changes in the demo log then regenerate `demo-log.md`.
 - Before you run `frost-demo.py`, install the latest build of the `frost` tool with `cargo install --path .`.
+
+## Workflows
+
+1. **Registry Management** (`frost registry`)
+   - Owner set with private XID documents
+   - Participant add with signed public XID documents
+   - Persistent JSON storage
+
+2. **DKG Invite Flow** (`frost dkg coordinator invite` / `frost dkg participant receive` / `frost dkg participant round1`)
+   - `invite`: Coordinator creates sealed/preview invites for participants
+   - `receive`: Participants fetch and decrypt invites from Hubert or local envelope
+   - `round1`: Participants accept or reject, posting Round 1 response to Hubert
+
+3. **DKG Round 1** (`frost dkg coordinator round1`)
+   - Coordinator fetches all participant responses from Hubert, validates GSTP responses, extracts Round 1 packages, saves to `collected_round1.json`, and posts individualized Round 2 requests (with optional preview)
+
+4. **DKG Round 2** (`frost dkg coordinator round2` / `frost dkg participant round2`)
+   - Participant: Responds with round2 packages, persists round2 secret, includes next `response_arid`, and updates `listening_at_arid`
+   - Coordinator: Fetches/validates Round 2 responses, saves `collected_round2.json`, and immediately posts finalize requests to each participant (combined collect + finalize dispatch)
+
+5. **DKG Finalize** (`frost dkg coordinator finalize` / `frost dkg participant finalize`)
+   - Participant: Runs part3, produces key/public key packages, persists them, and returns finalize response
+   - Coordinator: Collects finalize responses, writes `collected_finalize.json`, clears pending requests, and reports the group verifying key (`SigningPublicKey::Ed25519`, UR form `ur:signing-public-key`)
+
+6. **Signing**
+   - `sign coordinator invite`: builds session, per-participant ARIDs (commit/share), target envelope, and posts signInvite requests
+   - `sign participant receive`: decrypts/validates signInvite, shows participants/target, persists session state + commit response ARID
+   - `sign participant round1`: generates nonces/commitments, posts signRound1Response with next-hop share ARID, persists part1 state, updates listening ARID
+   - `sign coordinator round1`: collects all commitments, stores `commitments.json`, and dispatches per-participant signRound2 requests
+   - `sign participant round2`: fetches signRound2, validates session/commitments, produces signature share, posts to share ARID, and persists `share.json`
+   - `sign coordinator round2`: collects signature shares, combines into full signature, and outputs signed envelope
+   - `sign participant finalize`: validates full signature against target envelope
+
+7. **Storage Backends**
+   - Hubert server (HTTP)
+   - Mainline DHT
+   - IPFS
+   - Hybrid (DHT + IPFS)
+
+8. **Demo Script** (`frost-demo.py`)
+   - Provisions 4 participants (Alice, Bob, Carol, Dan) in separate directories
+   - Builds registries
+   - Creates and responds to DKG invites via Hubert
+   - Coordinator collects Round 1 packages and dispatches Round 2 requests
+   - Coordinator collects Round 2 responses and dispatches finalize requests (combined command)
+   - Participants post finalize responses
+   - Coordinator collects finalize responses and outputs the group verifying key
+   - Signing: builds a sample target envelope, previews `sign coordinator invite` (signInvite), posts it, participants run `sign participant receive`/`sign participant round1`, coordinator runs `sign coordinator round1` and posts signRound2 requests, participants run `sign participant round2` and post signature shares, coordinator runs `sign coordinator round2` to combine shares and output signed envelope, participants run `sign participant finalize` to validate the full signature
