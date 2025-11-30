@@ -6,20 +6,20 @@ use bc_ur::prelude::UR;
 use bc_xid::{XIDDocument, XIDVerifySignature};
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct DkGProposedParticipant {
+pub struct DkgProposedParticipant {
     ur_string: String,     // The UR encoding of the XID document
     envelope: Envelope,    // The envelope containing the XID document
     document: XIDDocument, // The participant's XID document
     response_arid: ARID,   // ARID of the participant's DKG response
 }
 
-impl PartialOrd for DkGProposedParticipant {
+impl PartialOrd for DkgProposedParticipant {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.xid().cmp(&other.xid()))
     }
 }
 
-impl DkGProposedParticipant {
+impl DkgProposedParticipant {
     pub fn new(ur_string: String, response_arid: ARID) -> Result<Self> {
         let (envelope, document) = parse_xid_envelope(&ur_string)?;
         Ok(Self { ur_string, envelope, document, response_arid })

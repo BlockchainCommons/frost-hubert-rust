@@ -30,7 +30,7 @@ All duplicate utility functions have been consolidated:
 
 ### 2. Medium Priority: Naming Consistency
 
-#### a) `DkGProposedParticipant` casing
+#### a) `DkGProposedParticipant` casing ✅
 The struct name uses unusual casing (`DkG`). Standard Rust style would be `DkgProposedParticipant`.
 
 **Files affected**:

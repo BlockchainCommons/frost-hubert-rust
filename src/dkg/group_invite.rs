@@ -8,7 +8,7 @@ use gstp::{
     SealedResponseBehavior,
 };
 
-use super::DkGProposedParticipant;
+use super::DkgProposedParticipant;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DkgInvite {
@@ -27,7 +27,7 @@ pub struct DkgInvite {
     // Charter statement for the DKG group (may be empty)
     charter: String,
     // Identifies participants and their indexes
-    ordered_participants: Vec<DkGProposedParticipant>,
+    ordered_participants: Vec<DkgProposedParticipant>,
 }
 
 impl DkgInvite {
@@ -57,9 +57,9 @@ impl DkgInvite {
             .into_iter()
             .zip(response_arids.into_iter())
             .map(|(ur_string, response_arid)| {
-                DkGProposedParticipant::new(ur_string, response_arid)
+                DkgProposedParticipant::new(ur_string, response_arid)
             })
-            .collect::<Result<Vec<DkGProposedParticipant>>>()?;
+            .collect::<Result<Vec<DkgProposedParticipant>>>()?;
         if min_signers > ordered_participants.len() {
             anyhow::bail!("min_signers cannot exceed number of participants");
         }
@@ -90,7 +90,7 @@ impl DkgInvite {
 
     pub fn charter(&self) -> &str { &self.charter }
 
-    pub fn participants(&self) -> &Vec<DkGProposedParticipant> {
+    pub fn participants(&self) -> &Vec<DkgProposedParticipant> {
         &self.ordered_participants
     }
 
