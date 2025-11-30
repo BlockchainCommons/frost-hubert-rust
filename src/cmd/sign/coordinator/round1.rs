@@ -354,7 +354,7 @@ fn fetch_commit_response(
         .context("Response has no result envelope")?;
 
     let function: String = result.extract_subject()?;
-    if function != "signCommitResponse" {
+    if function != "signRound1Response" {
         bail!("Unexpected response function: {}", function);
     }
 

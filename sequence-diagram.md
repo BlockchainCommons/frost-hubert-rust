@@ -121,16 +121,16 @@ sequenceDiagram
     H->>D: signInvite(B, C, D)
 
     note over B: sign participant round1
-    B->>H: signCommitResponse(B)
+    B->>H: signRound1Response(B)
 
     note over C: sign participant round1
-    C->>H: signCommitResponse(C)
+    C->>H: signRound1Response(C)
 
     note over D: sign participant round1
-    D->>H: signCommitResponse(D)
+    D->>H: signRound1Response(D)
 
     note over A: sign coordinator round1
-    H->>A: signCommitResponse(B)<br/>signCommitResponse(C)<br/>signCommitResponse(D)
+    H->>A: signRound1Response(B)<br/>signRound1Response(C)<br/>signRound1Response(D)
     A->>H: signShare(B)<br/>signShare(C)<br/>signShare(D)
 
     note over B: sign participant round2

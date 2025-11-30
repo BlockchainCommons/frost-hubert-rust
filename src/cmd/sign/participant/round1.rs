@@ -187,7 +187,7 @@ impl CommandArgs {
             let next_share =
                 next_share_arid.expect("next share ARID present on accept");
 
-            let response_body = Envelope::new("signCommitResponse")
+            let response_body = Envelope::new("signRound1Response")
                 .add_assertion("session", session_id)
                 .add_assertion("commitments", CBOR::from(commitments_json))
                 .add_assertion("response_arid", next_share);

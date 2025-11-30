@@ -28,7 +28,7 @@ The `frost` CLI is a working tool for managing FROST (Flexible Round-Optimized S
 6. **Signing (in progress)**
    - `sign invite` (coordinator): builds session, per-participant ARIDs (commit/share), target envelope, and posts signInvite requests
    - `sign receive` (participant): decrypts/validates signInvite, shows participants/target, persists session state + commit response ARID
-   - `sign commit` (participant): generates nonces/commitments, posts signCommitResponse with next-hop share ARID, persists part1 state, updates listening ARID
+   - `sign commit` (participant): generates nonces/commitments, posts signRound1Response with next-hop share ARID, persists part1 state, updates listening ARID
    - `sign collect` (coordinator): collects all commitments, stores `commitments.json`, and dispatches per-participant signShare requests
    - `sign share` (participant): fetches signShare, validates session/commitments, produces signature share, posts to share ARID, and persists `share.json`
 
@@ -98,7 +98,7 @@ The `demo-log.md` now runs through finalize collect and participant signShare re
    - Pattern after `frost dkg participant round1`: requires Hubert storage when posting; `--timeout` only with storage; MUST support `--preview` to show the unsealed response and dry-run (no state changes, no Hubert posts). Include an explicit rejection path (`--reject <reason>`) that posts a GSTP error/decline to the coordinator’s commit ARID and clears local signing state/listening ARID.
    - Load persisted details from `sign_receive.json` (group/session IDs, coordinator-provided response ARID, target UR, participants, coordinator) instead of re-fetching from Hubert; validate consistency. Coordinator must supply the commit `response_arid`; the participant generates only the next-hop ARID for the coordinator’s forthcoming signShare request.
    - Load participant key package (`contributions.key_package` from registry), run FROST signing part1 (`round1::commit`) to produce signing nonces + commitments; compute/record target digest from the request (use persisted target UR if present to avoid structural drift).
-   - Build GSTP response (e.g., `signCommitResponse`) carrying group, session, commitments (JSON/CBOR), share-request ARID for the next hop, and targetDigest; include `peer_continuation` from request, sign with owner keys, and encrypt to coordinator.
+   - Build GSTP response (e.g., `signRound1Response`) carrying group, session, commitments (JSON/CBOR), share-request ARID for the next hop, and targetDigest; include `peer_continuation` from request, sign with owner keys, and encrypt to coordinator.
    - Post to coordinator’s commit ARID (from request). Persist part1 state under `group-state/<group-id>/signing/<session-id>/commit.json` (nonces, commitments, target digest, session metadata, share-request ARID) and update `registry.json` to set `listening_at_arid` to the share-request ARID for the upcoming signShare step.
    - Demo notes: Show one participant preview; others post without preview.
 
@@ -173,7 +173,7 @@ The pattern is established:
 ### Lessons Learned / Cleanup
 
 - Sign state is now fully session-scoped: start/commit/collect use session IDs directly; group-level pending_requests are no longer used for signing phases.
-- Avoid redundant fields: signShare drops group/minSigners/targetDigest; signCommitResponse drops group/targetDigest. Participants enforce invariants from the signed start state instead.
+- Avoid redundant fields: signShare drops group/minSigners/targetDigest; signRound1Response drops group/targetDigest. Participants enforce invariants from the signed start state instead.
 - Always transmit the literal target envelope, not a UR wrapper; digest validation relies on the envelope itself.
 - `--no-envelope` was removed from receive flows; outputs now include info plus the bare session line for scripting.
 - Signature share responses no longer echo `targetDigest`; session ID + persisted state already bind the target.
