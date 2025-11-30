@@ -57,11 +57,11 @@ No change needed; the naming reflects the protocol's message flow.
 
 Several `exec()` methods exceed 100 lines and mix multiple concerns:
 
-| File                                   | Lines | Recommendation                            |
-| -------------------------------------- | ----- | ----------------------------------------- |
-| `src/cmd/sign/participant/finalize.rs` | ✅     | Refactored into helper functions          |
-| `src/cmd/sign/coordinator/invite.rs`   | ✅     | Refactored into helper functions          |
-| `src/cmd/dkg/coordinator/round1.rs`    | ~100  | Extract: collection phase, dispatch phase |
+| File                                   | Lines | Recommendation                   |
+| -------------------------------------- | ----- | -------------------------------- |
+| `src/cmd/sign/participant/finalize.rs` | ✅     | Refactored into helper functions |
+| `src/cmd/sign/coordinator/invite.rs`   | ✅     | Refactored into helper functions |
+| `src/cmd/dkg/coordinator/round1.rs`    | ✅     | Refactored into helper functions |
 
 **`sign/participant/finalize.rs` refactoring (completed):**
 - `exec()` reduced from ~220 lines to ~75 lines
@@ -74,6 +74,15 @@ Several `exec()` methods exceed 100 lines and mix multiple concerns:
 - Introduced `SessionArids` struct to manage session/start/commit/share ARIDs
 - Introduced `SignInviteContext` struct to bundle request-building parameters
 - Extracted helpers: `validate_coordinator()`, `gather_recipient_documents()`, `build_sign_invite_request()`, `build_session_state_json()`, `persist_session_state()`, `post_to_hubert()`
+
+**`dkg/coordinator/round1.rs` refactoring (completed):**
+- `exec()` reduced from ~100 lines to ~55 lines; removed `#[allow(clippy::too_many_arguments)]`
+- Introduced `Round1Context` struct to bundle runtime/client/registry/owner parameters
+- Introduced type aliases `Round1Package` and `NextResponseArid` to reduce type complexity
+- Collection phase: `collect_round1_responses()`, `fetch_all_round1_packages()`, `persist_round1_packages()`, `update_pending_for_round2()`
+- Dispatch phase: `dispatch_round2_requests()`, `build_round2_participant_info()`, `update_pending_for_round2_collection()`
+- Response handling: `validate_round1_response()`, `extract_round1_package()`
+- Output: `print_summary()`
 
 ---
 
