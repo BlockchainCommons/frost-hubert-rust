@@ -135,18 +135,18 @@ sequenceDiagram
 
     note over B: sign participant round2
     H->>B: signRound2(B)
-    B->>H: signShareResponse(B)
+    B->>H: signRound2Response(B)
 
     note over C: sign participant round2
     H->>C: signRound2(C)
-    C->>H: signShareResponse(C)
+    C->>H: signRound2Response(C)
 
     note over D: sign participant round2
     H->>D: signRound2(D)
-    D->>H: signShareResponse(D)
+    D->>H: signRound2Response(D)
 
     note over A: sign coordinator round2
-    H->>A: signShareResponse(B)<br/>signShareResponse(C)<br/>signShareResponse(D)
+    H->>A: signRound2Response(B)<br/>signRound2Response(C)<br/>signRound2Response(D)
     A->>H: signFinalize(B)<br/>signFinalize(C)<br/>signFinalize(D)
 
     note over B: sign participant finalize

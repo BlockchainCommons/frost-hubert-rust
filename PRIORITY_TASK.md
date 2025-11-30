@@ -117,7 +117,7 @@ The `demo-log.md` now runs through finalize collect and participant signRound2 r
    - Collect all signature shares from the share-collection ARID; validate and aggregate to the final `Signature::Ed25519`.
    - Verify the aggregated signature against the target digest and by attaching it to the target envelope with the group verifying key; abort if verification fails.
    - Persist final signature and session transcript under `group-state/<group-id>/signing/<session-id>/final.json`; print the `ur:signature/...` once after dispatch.
-   - Post per-participant finalize packages (sealed to each participant’s provided ARID from signShareResponse) containing session ID and the signature shares needed for participants to independently recompute the signature (no aggregated signature sent).
+   - Post per-participant finalize packages (sealed to each participant’s provided ARID from signRound2Response) containing session ID and the signature shares needed for participants to independently recompute the signature (no aggregated signature sent).
 
 7) **`frost sign participant finalize` (participant)**
    - Fetch finalize package from personal ARID, reconstruct/verify the group signature using persisted session state plus provided shares/commitments, persist/print signature, attach it to the target envelope and verify locally using the group verifying key.
@@ -181,7 +181,7 @@ The pattern is established:
 
 ### Next Steps
 
-- Extend `signShareResponse` to include a per-participant `response_arid` for the final hop so the coordinator can return aggregation material. ✅
+- Extend `signRound2Response` to include a per-participant `response_arid` for the final hop so the coordinator can return aggregation material. ✅
 - Replace `frost sign round2` with `frost sign coordinator round2` (coordinator): collect shares, verify/aggregate the joint signature, and post per-participant finalize packages (sealed) back to the `response_arid`, containing the session ID plus the commitments/signature shares needed for participants to deterministically recompute the signature (do not re-send target details already bound to the session). ✅
 - Add a participant finalize command (`sign attach`) to fetch the finalize package, recompute/verify the signature locally using persisted session state + provided shares/commitments, persist/print the signature, and attach to the target envelope; add demo coverage.
 - Add integration coverage for signRound2/signFinalize, including failure cases (threshold mismatch, stale/incorrect session).

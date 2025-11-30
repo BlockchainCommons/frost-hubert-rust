@@ -351,7 +351,7 @@ fn fetch_share_response(
         .context("Response has no result envelope")?;
 
     let function: String = result.extract_subject()?;
-    if function != "signShareResponse" {
+    if function != "signRound2Response" {
         bail!("Unexpected response function: {}", function);
     }
 

@@ -971,7 +971,7 @@ jq . "${{COMMITMENTS_PATH}}"
 
         run_step(
             shell,
-            "Bob previews signShareResponse",
+            "Bob previews signRound2Response",
             f"""
 frost sign participant round2 --preview --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_SESSION_ID}}" | envelope format
 """,
@@ -983,7 +983,7 @@ frost sign participant round2 --preview --storage $STORAGE --timeout $TIMEOUT --
 
         run_step(
             shell,
-            "Bob posts signShareResponse",
+            "Bob posts signRound2Response",
             f"""
 frost sign participant round2 --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_SESSION_ID}}"
 """,
@@ -992,7 +992,7 @@ frost sign participant round2 --verbose --storage $STORAGE --timeout $TIMEOUT --
 
         run_step(
             shell,
-            "Carol posts signShareResponse",
+            "Carol posts signRound2Response",
             f"""
 frost sign participant round2 --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{CAROL_SESSION_ID}}"
 """,
@@ -1001,7 +1001,7 @@ frost sign participant round2 --storage $STORAGE --timeout $TIMEOUT --registry {
 
         run_step(
             shell,
-            "Dan posts signShareResponse",
+            "Dan posts signRound2Response",
             f"""
 frost sign participant round2 --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{DAN_SESSION_ID}}"
 """,
