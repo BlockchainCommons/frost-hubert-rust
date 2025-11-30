@@ -17,10 +17,12 @@ use gstp::{
 };
 use tokio::runtime::Runtime;
 
-use crate::cmd::dkg::common::{OptionalStorageSelector, parse_arid_ur};
 use crate::{
     cmd::{
-        is_verbose, registry::participants_file_path, storage::StorageClient,
+        dkg::common::{OptionalStorageSelector, parse_arid_ur},
+        is_verbose,
+        registry::participants_file_path,
+        storage::StorageClient,
     },
     registry::Registry,
 };
@@ -84,7 +86,7 @@ impl CommandArgs {
         let round2_secret_path = state_dir.join("round2_secret.json");
         if !round2_secret_path.exists() {
             bail!(
-                "Round 2 secret not found at {}. Did you run round2 respond?",
+                "Round 2 secret not found at {}. Did you run round2?",
                 round2_secret_path.display()
             );
         }

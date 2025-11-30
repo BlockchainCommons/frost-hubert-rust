@@ -15,10 +15,12 @@ use gstp::{
 };
 use tokio::runtime::Runtime;
 
-use crate::cmd::dkg::common::{OptionalStorageSelector, parse_arid_ur};
 use crate::{
     cmd::{
-        is_verbose, registry::participants_file_path, storage::StorageClient,
+        dkg::common::{OptionalStorageSelector, parse_arid_ur},
+        is_verbose,
+        registry::participants_file_path,
+        storage::StorageClient,
     },
     registry::Registry,
 };
@@ -53,8 +55,8 @@ pub struct CommandArgs {
 impl CommandArgs {
     pub fn exec(self) -> Result<()> {
         let selection = self.storage.resolve()?;
-        let selection = selection
-            .context("Hubert storage is required for round2 respond")?;
+        let selection =
+            selection.context("Hubert storage is required for round2")?;
 
         let registry_path = participants_file_path(self.registry.clone())?;
         let mut registry =

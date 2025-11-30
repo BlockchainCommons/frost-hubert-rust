@@ -664,7 +664,7 @@ jq '.groups[].listening_at_arid' {qp(REGISTRIES["bob"])}
             "Bob responds to Round 2 request",
             f"""
 BOB_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["bob"])})
-frost dkg participant round2 respond --preview --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_GROUP_ID}}" | envelope format
+frost dkg participant round2 --preview --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_GROUP_ID}}" | envelope format
 """,
             commentary=(
                 "Bob fetches the Round 2 request, runs FROST DKG part2 "
@@ -678,7 +678,7 @@ frost dkg participant round2 respond --preview --storage $STORAGE --timeout $TIM
             "Bob posts Round 2 response",
             f"""
 BOB_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["bob"])})
-frost dkg participant round2 respond --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_GROUP_ID}}"
+frost dkg participant round2 --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_GROUP_ID}}"
 """,
             commentary=(
                 "Bob posts the sealed Round 2 response to the coordinator (no preview output)."
@@ -690,7 +690,7 @@ frost dkg participant round2 respond --verbose --storage $STORAGE --timeout $TIM
             "Carol responds to Round 2 request",
             f"""
 CAROL_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["carol"])})
-frost dkg participant round2 respond --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{CAROL_GROUP_ID}}"
+frost dkg participant round2 --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{CAROL_GROUP_ID}}"
 """,
             commentary=(
                 "Carol processes the Round 2 request with her Round 1 secret and all Round 1 packages, "
@@ -703,7 +703,7 @@ frost dkg participant round2 respond --verbose --storage $STORAGE --timeout $TIM
             "Dan responds to Round 2 request",
             f"""
 DAN_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["dan"])})
-frost dkg participant round2 respond --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{DAN_GROUP_ID}}"
+frost dkg participant round2 --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{DAN_GROUP_ID}}"
 """,
             commentary=(
                 "Dan processes the Round 2 request with his Round 1 secret and all Round 1 packages, "

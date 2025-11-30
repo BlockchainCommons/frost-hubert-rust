@@ -150,7 +150,7 @@ The `ContributionPaths` structure now used for Round 2:
 pub struct ContributionPaths {
     pub round1_secret: Option<String>,
     pub round1_package: Option<String>,
-    pub round2_secret: Option<String>,  // Populated during round2 respond
+    pub round2_secret: Option<String>,  // Populated during round2
     pub key_package: Option<String>,    // Ready for finalize
 }
 ```

@@ -61,15 +61,15 @@ sequenceDiagram
     H->>A: dkgInviteResponse(B)<br/>dkgInviteResponse(C)<br/>dkgInviteResponse(D)
     A->>H: dkgRound2(B)<br/>dkgRound2(C)<br/>dkgRound2(D)
 
-    note over B: dkg participant round2 respond
+    note over B: dkg participant round2
     H->>B: dkgRound2(B)
     B->>H: dkgRound2Response(B)
 
-    note over C: dkg participant round2 respond
+    note over C: dkg participant round2
     H->>C: dkgRound2(C)
     C->>H: dkgRound2Response(C)
 
-    note over D: dkg participant round2 respond
+    note over D: dkg participant round2
     H->>D: dkgRound2(D)
     D->>H: dkgRound2Response(D)
 
