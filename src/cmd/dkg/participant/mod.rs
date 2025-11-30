@@ -1,5 +1,6 @@
 pub mod finalize;
-pub mod invite;
+pub mod receive;
+pub mod round1;
 pub mod round2;
 
 use anyhow::Result;
@@ -15,8 +16,10 @@ pub struct CommandArgs {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    /// Participant DKG invite operations
-    Invite(invite::CommandArgs),
+    /// Retrieve or inspect a DKG invite
+    Receive(receive::CommandArgs),
+    /// Respond to a DKG invite (Round 1)
+    Round1(round1::CommandArgs),
     /// DKG Round 2 operations
     Round2(round2::CommandArgs),
     /// DKG finalize operations
@@ -26,7 +29,8 @@ enum Commands {
 impl CommandArgs {
     pub fn exec(self) -> Result<()> {
         match self.command {
-            Commands::Invite(args) => args.exec(),
+            Commands::Receive(args) => args.exec(),
+            Commands::Round1(args) => args.exec(),
             Commands::Round2(args) => args.exec(),
             Commands::Finalize(args) => args.exec(),
         }

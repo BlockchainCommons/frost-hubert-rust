@@ -10,10 +10,10 @@ use clap::Parser;
 use gstp::SealedResponse;
 use tokio::runtime::Runtime;
 
-use crate::cmd::dkg::common::OptionalStorageSelector;
 use crate::{
     cmd::{
-        is_verbose, registry::participants_file_path, storage::StorageClient,
+        dkg::common::OptionalStorageSelector, is_verbose,
+        registry::participants_file_path, storage::StorageClient,
     },
     registry::Registry,
 };

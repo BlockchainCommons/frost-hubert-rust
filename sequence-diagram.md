@@ -39,22 +39,22 @@ sequenceDiagram
     S->>C: invite ARID
     S->>D: invite ARID
 
-    note over B: dkg participant invite receive
+    note over B: dkg participant receive
     H->>B: dkgCoordinatorInvite(B, C, D)
 
-    note over C: dkg participant invite receive
+    note over C: dkg participant receive
     H->>C: dkgCoordinatorInvite(B, C, D)
 
-    note over D: dkg participant invite receive
+    note over D: dkg participant receive
     H->>D: dkgCoordinatorInvite(B, C, D)
 
-    note over B: dkg participant invite respond
+    note over B: dkg participant round1
     B->>H: dkgInviteResponse(B)
 
-    note over C: dkg participant invite respond
+    note over C: dkg participant round1
     C->>H: dkgInviteResponse(C)
 
-    note over D: dkg participant invite respond
+    note over D: dkg participant round1
     D->>H: dkgInviteResponse(D)
 
     note over A: dkg coordinator round1

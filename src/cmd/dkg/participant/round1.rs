@@ -12,13 +12,13 @@ use gstp::{SealedResponse, SealedResponseBehavior};
 use rand_core::OsRng;
 use tokio::runtime::Runtime;
 
-use crate::cmd::dkg::common::{
-    OptionalStorageSelector, build_group_participants, parse_arid_ur,
-    resolve_sender,
-};
 use super::receive::decode_invite_details;
 use crate::{
     cmd::{
+        dkg::common::{
+            OptionalStorageSelector, build_group_participants, parse_arid_ur,
+            resolve_sender,
+        },
         registry::participants_file_path,
         storage::{StorageClient, StorageSelection},
     },
@@ -27,7 +27,7 @@ use crate::{
     },
 };
 
-/// Respond to a DKG invite.
+/// Respond to a DKG invite (Round 1).
 #[derive(Debug, Parser)]
 #[group(skip)]
 pub struct CommandArgs {

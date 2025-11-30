@@ -6,12 +6,13 @@ use bc_envelope::prelude::*;
 use clap::Parser;
 use tokio::runtime::Runtime;
 
-use crate::cmd::dkg::common::{
-    OptionalStorageSelector, resolve_participants,
-};
 use crate::{
     DkgGroupInvite,
-    cmd::{registry::participants_file_path, storage::StorageClient},
+    cmd::{
+        dkg::common::{OptionalStorageSelector, resolve_participants},
+        registry::participants_file_path,
+        storage::StorageClient,
+    },
     registry::{GroupParticipant, GroupRecord, PendingRequests, Registry},
 };
 

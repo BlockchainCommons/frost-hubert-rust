@@ -531,8 +531,8 @@ echo "${{ALICE_INVITE_ARID}}"
             shell,
             "Receiving invite from Hubert as Bob",
             f"""
-BOB_INVITE=$(frost dkg participant invite receive --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{ALICE_INVITE_ARID}}")
-frost dkg participant invite receive --info --registry {qp(REGISTRIES["bob"])} "${{BOB_INVITE}}"
+BOB_INVITE=$(frost dkg participant receive --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{ALICE_INVITE_ARID}}")
+frost dkg participant receive --info --registry {qp(REGISTRIES["bob"])} "${{BOB_INVITE}}"
 """,
             commentary=(
                 "Retrieve the invite from Hubert using Bob's registry (capturing the envelope), "
@@ -542,9 +542,9 @@ frost dkg participant invite receive --info --registry {qp(REGISTRIES["bob"])} "
 
         run_step(
             shell,
-            "Composing Bob's preview invite response",
+            "Composing Bob's preview Round 1 response",
             f"""
-BOB_RESPONSE_PREVIEW=$(frost dkg participant invite respond --preview --registry {qp(REGISTRIES["bob"])} "${{BOB_INVITE}}")
+BOB_RESPONSE_PREVIEW=$(frost dkg participant round1 --preview --registry {qp(REGISTRIES["bob"])} "${{BOB_INVITE}}")
 echo "${{BOB_RESPONSE_PREVIEW}}" | envelope format
 """,
             commentary=(
@@ -555,9 +555,9 @@ echo "${{BOB_RESPONSE_PREVIEW}}" | envelope format
 
         run_step(
             shell,
-            "Composing Bob's sealed invite response",
+            "Composing Bob's sealed Round 1 response",
             f"""
-BOB_RESPONSE_SEALED=$(frost dkg participant invite respond --registry {qp(REGISTRIES["bob"])} "${{BOB_INVITE}}")
+BOB_RESPONSE_SEALED=$(frost dkg participant round1 --registry {qp(REGISTRIES["bob"])} "${{BOB_INVITE}}")
 echo "${{BOB_RESPONSE_SEALED}}" | envelope format
 """,
             commentary=(
@@ -567,24 +567,24 @@ echo "${{BOB_RESPONSE_SEALED}}" | envelope format
 
         run_step(
             shell,
-            "Bob responds to the invite",
+            "Bob posts Round 1 response",
             f"""
-frost dkg participant invite respond --verbose --storage $STORAGE --registry {qp(REGISTRIES["bob"])} "${{BOB_INVITE}}"
+frost dkg participant round1 --verbose --storage $STORAGE --registry {qp(REGISTRIES["bob"])} "${{BOB_INVITE}}"
 """,
             commentary=(
-                "Post Bob's sealed response to Hubert using the cached invite envelope."
+                "Post Bob's sealed Round 1 response to Hubert using the cached invite envelope."
             ),
         )
 
         run_step(
             shell,
-            "Carol and Dan respond to the invite",
+            "Carol and Dan post Round 1 responses",
             f"""
-frost dkg participant invite respond --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{ALICE_INVITE_ARID}}"
-frost dkg participant invite respond --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{ALICE_INVITE_ARID}}"
+frost dkg participant round1 --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{ALICE_INVITE_ARID}}"
+frost dkg participant round1 --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{ALICE_INVITE_ARID}}"
 """,
             commentary=(
-                "Carol and Dan accept the invite from Hubert using their registries, posting their responses to Hubert."
+                "Carol and Dan accept the invite from Hubert using their registries, posting their Round 1 responses to Hubert."
             ),
         )
 
