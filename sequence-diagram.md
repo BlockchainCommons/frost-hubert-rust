@@ -77,15 +77,15 @@ sequenceDiagram
     H->>A: dkgRound2Response(B)<br/>dkgRound2Response(C)<br/>dkgRound2Response(D)
     A->>H: dkgFinalize(B)<br/>dkgFinalize(C)<br/>dkgFinalize(D)
 
-    note over B: dkg participant finalize respond
+    note over B: dkg participant finalize
     H->>B: dkgFinalize(B)
     B->>H: dkgFinalizeResponse(B)
 
-    note over C: dkg participant finalize respond
+    note over C: dkg participant finalize
     H->>C: dkgFinalize(C)
     C->>H: dkgFinalizeResponse(C)
 
-    note over D: dkg participant finalize respond
+    note over D: dkg participant finalize
     H->>D: dkgFinalize(D)
     D->>H: dkgFinalizeResponse(D)
 

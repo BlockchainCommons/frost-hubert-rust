@@ -746,7 +746,7 @@ jq . {qp(PARTICIPANT_DIRS["alice"])}/group-state/*/collected_round2.json
             "Bob previews finalize response",
             f"""
 BOB_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["bob"])})
-frost dkg participant finalize respond --preview --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_GROUP_ID}}" | envelope format
+frost dkg participant finalize --preview --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_GROUP_ID}}" | envelope format
 """,
             commentary=(
                 "Bob previews his finalize response structure (key packages) without posting."
@@ -758,7 +758,7 @@ frost dkg participant finalize respond --preview --storage $STORAGE --timeout $T
             "Bob posts finalize response",
             f"""
 BOB_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["bob"])})
-frost dkg participant finalize respond --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_GROUP_ID}}"
+frost dkg participant finalize --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["bob"])} "${{BOB_GROUP_ID}}"
 """,
             commentary="Bob posts his finalize response with generated key packages.",
         )
@@ -768,7 +768,7 @@ frost dkg participant finalize respond --verbose --storage $STORAGE --timeout $T
             "Carol posts finalize response",
             f"""
 CAROL_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["carol"])})
-frost dkg participant finalize respond --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{CAROL_GROUP_ID}}"
+frost dkg participant finalize --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["carol"])} "${{CAROL_GROUP_ID}}"
 """,
             commentary="Carol posts her finalize response with generated key packages.",
         )
@@ -778,7 +778,7 @@ frost dkg participant finalize respond --verbose --storage $STORAGE --timeout $T
             "Dan posts finalize response",
             f"""
 DAN_GROUP_ID=$(jq -r '.groups | keys[0]' {qp(REGISTRIES["dan"])})
-frost dkg participant finalize respond --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{DAN_GROUP_ID}}"
+frost dkg participant finalize --verbose --storage $STORAGE --timeout $TIMEOUT --registry {qp(REGISTRIES["dan"])} "${{DAN_GROUP_ID}}"
 """,
             commentary="Dan posts his finalize response with generated key packages.",
         )
