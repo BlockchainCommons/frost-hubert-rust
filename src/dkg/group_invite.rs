@@ -11,7 +11,7 @@ use gstp::{
 use super::DkGProposedParticipant;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct DkgGroupInvite {
+pub struct DkgInvite {
     // ARID of the invite request
     request_id: ARID,
     // XID document of the sender
@@ -30,7 +30,7 @@ pub struct DkgGroupInvite {
     ordered_participants: Vec<DkGProposedParticipant>,
 }
 
-impl DkgGroupInvite {
+impl DkgInvite {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         request_id: ARID,
@@ -95,16 +95,13 @@ impl DkgGroupInvite {
     }
 
     pub fn to_request(&self) -> Result<SealedRequest> {
-        let mut request = SealedRequest::new(
-            "dkgGroupInvite",
-            self.request_id(),
-            self.sender(),
-        )
-        .with_parameter("group", self.group_id())
-        .with_parameter("minSigners", self.min_signers as u64)
-        .with_parameter("charter", self.charter.clone())
-        .with_date(self.date())
-        .with_parameter("validUntil", self.valid_until());
+        let mut request =
+            SealedRequest::new("dkgInvite", self.request_id(), self.sender())
+                .with_parameter("group", self.group_id())
+                .with_parameter("minSigners", self.min_signers as u64)
+                .with_parameter("charter", self.charter.clone())
+                .with_date(self.date())
+                .with_parameter("validUntil", self.valid_until());
         for participant in self.participants() {
             let xid_doc_envelope = participant.xid_doc_envelope();
             let response_arid = participant.response_arid();
@@ -246,10 +243,10 @@ impl DkgInvitation {
         )?)
     }
 
-    /// Reverses `DkgGroupInvite::to_envelope` for a single participant.
+    /// Reverses `DkgInvite::to_envelope` for a single participant.
     ///
     /// - Verifies the envelope is properly encrypted to the recipient.
-    /// - Verifies the decrypted envelope is a valid DKG group invite from the
+    /// - Verifies the decrypted envelope is a valid DKG invite from the
     ///   expected sender.
     /// - Verifies the participant is included in the invite.
     /// - Decrypts the participant's response ARID.
@@ -281,9 +278,7 @@ impl DkgInvitation {
             anyhow::bail!("Invite sender does not match expected sender");
         }
 
-        if sealed_request.request().function()
-            != &Function::from("dkgGroupInvite")
-        {
+        if sealed_request.request().function() != &Function::from("dkgInvite") {
             anyhow::bail!("Unexpected invite function");
         }
 

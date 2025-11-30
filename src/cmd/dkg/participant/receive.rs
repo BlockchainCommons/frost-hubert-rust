@@ -190,8 +190,7 @@ pub fn decode_invite_details(
             );
         }
     }
-    if sealed_request.request().function() != &Function::from("dkgGroupInvite")
-    {
+    if sealed_request.request().function() != &Function::from("dkgInvite") {
         bail!("Unexpected invite function");
     }
 

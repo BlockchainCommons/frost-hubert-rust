@@ -311,7 +311,7 @@ fn build_response_body(
     response_arid: ARID,
     round1_package: Option<&frost::keys::dkg::round1::Package>,
 ) -> Result<Envelope> {
-    let mut envelope = Envelope::new("dkgInviteResponse")
+    let mut envelope = Envelope::new("dkgRound1Response")
         .add_assertion("group", group_id)
         .add_assertion("participant", participant)
         .add_assertion("response_arid", response_arid);

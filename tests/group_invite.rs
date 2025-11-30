@@ -9,7 +9,7 @@ use bc_xid::{
     XIDDocument, XIDGeneratorOptions, XIDGenesisMarkOptions,
     XIDInceptionKeyOptions, XIDPrivateKeyOptions, XIDSigningOptions,
 };
-use frost::{DkgGroupInvite, DkgInvitation, DkgInvitationResult};
+use frost::{DkgInvitation, DkgInvitationResult, DkgInvite};
 use gstp::SealedRequestBehavior;
 use indoc::indoc;
 use provenance_mark::ProvenanceMarkResolution;
@@ -90,7 +90,7 @@ fn test_dkg_group_invite() {
     let carol_response_arid = make_arid(&mut rng);
     let response_arids =
         vec![alice_response_arid, bob_response_arid, carol_response_arid];
-    let invite = DkgGroupInvite::new(
+    let invite = DkgInvite::new(
         request_id,
         coordinator.clone(),
         group_id,
@@ -106,7 +106,7 @@ fn test_dkg_group_invite() {
     #[rustfmt::skip]
     let expected_format = (indoc! {r#"
         request(ARID(bbc88f5e)) [
-            'body': «"dkgGroupInvite"» [
+            'body': «"dkgInvite"» [
                 ❰"charter"❱: "Test charter"
                 ❰"group"❱: ARID(b2c49e75)
                 ❰"minSigners"❱: 2

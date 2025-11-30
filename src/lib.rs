@@ -6,7 +6,7 @@ pub mod dkg;
 pub mod registry;
 
 pub use dkg::{
-    DkGProposedParticipant, DkgGroupInvite, DkgInvitation, DkgInvitationResult,
+    DkGProposedParticipant, DkgInvitation, DkgInvitationResult, DkgInvite,
 };
 
 /// Entrypoint shared by the binary and integration tests.

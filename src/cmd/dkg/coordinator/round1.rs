@@ -429,7 +429,7 @@ fn fetch_and_validate_response(
 
     // Validate the response structure
     let function: String = result.extract_subject()?;
-    if function != "dkgInviteResponse" {
+    if function != "dkgRound1Response" {
         bail!("Unexpected response function: {}", function);
     }
 

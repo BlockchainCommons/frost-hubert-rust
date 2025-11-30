@@ -7,7 +7,7 @@ use clap::Parser;
 use tokio::runtime::Runtime;
 
 use crate::{
-    DkgGroupInvite,
+    DkgInvite,
     cmd::{
         dkg::common::{OptionalStorageSelector, resolve_participants},
         registry::participants_file_path,
@@ -114,7 +114,7 @@ impl CommandArgs {
 }
 
 struct InviteData {
-    invite: DkgGroupInvite,
+    invite: DkgInvite,
     participant_xids: Vec<XID>,
     pending_requests: PendingRequests,
 }
@@ -155,7 +155,7 @@ fn build_invite(
         bail!("--min-signers cannot exceed participant count");
     }
 
-    let invite = DkgGroupInvite::new(
+    let invite = DkgInvite::new(
         ARID::new(),
         registry
             .owner()

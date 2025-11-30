@@ -33,32 +33,32 @@ sequenceDiagram
     actor D as Dan
 
     note over A: dkg coordinator invite
-    A->>H: dkgCoordinatorInvite(B, C, D)
+    A->>H: dkgInvite(B, C, D)
     A->>S: invite ARID
     S->>B: invite ARID
     S->>C: invite ARID
     S->>D: invite ARID
 
     note over B: dkg participant receive
-    H->>B: dkgCoordinatorInvite(B, C, D)
+    H->>B: dkgInvite(B, C, D)
 
     note over C: dkg participant receive
-    H->>C: dkgCoordinatorInvite(B, C, D)
+    H->>C: dkgInvite(B, C, D)
 
     note over D: dkg participant receive
-    H->>D: dkgCoordinatorInvite(B, C, D)
+    H->>D: dkgInvite(B, C, D)
 
     note over B: dkg participant round1
-    B->>H: dkgInviteResponse(B)
+    B->>H: dkgRound1Response(B)
 
     note over C: dkg participant round1
-    C->>H: dkgInviteResponse(C)
+    C->>H: dkgRound1Response(C)
 
     note over D: dkg participant round1
-    D->>H: dkgInviteResponse(D)
+    D->>H: dkgRound1Response(D)
 
     note over A: dkg coordinator round1
-    H->>A: dkgInviteResponse(B)<br/>dkgInviteResponse(C)<br/>dkgInviteResponse(D)
+    H->>A: dkgRound1Response(B)<br/>dkgRound1Response(C)<br/>dkgRound1Response(D)
     A->>H: dkgRound2(B)<br/>dkgRound2(C)<br/>dkgRound2(D)
 
     note over B: dkg participant round2
