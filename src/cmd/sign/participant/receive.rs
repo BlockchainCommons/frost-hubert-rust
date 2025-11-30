@@ -1,7 +1,4 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::fs;
 
 use anyhow::{Context, Result, bail};
 use bc_components::{ARID, XID, XIDProvider};
@@ -20,6 +17,7 @@ use crate::{
             },
         },
         registry::participants_file_path,
+        sign::common::signing_state_dir,
         storage::{StorageClient, StorageSelection},
     },
     registry::Registry,
@@ -303,19 +301,4 @@ fn format_participant_names(
             format_name_with_owner_marker(name, is_owner)
         })
         .collect()
-}
-
-fn signing_state_dir(
-    registry_path: &Path,
-    group_id: &ARID,
-    session_id: &ARID,
-) -> PathBuf {
-    let base = registry_path
-        .parent()
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| PathBuf::from("."));
-    base.join("group-state")
-        .join(group_id.hex())
-        .join("signing")
-        .join(session_id.hex())
 }

@@ -1,13 +1,7 @@
-use std::{
-    collections::BTreeMap,
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{collections::BTreeMap, fs};
 
 use anyhow::{Context, Result, bail};
-use bc_components::{
-    ARID, Ed25519PublicKey, JSON, SigningPublicKey, XID, XIDProvider,
-};
+use bc_components::{ARID, JSON, XID, XIDProvider};
 use bc_envelope::prelude::*;
 use clap::Parser;
 use frost_ed25519 as frost;
@@ -19,7 +13,10 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
-        dkg::common::{OptionalStorageSelector, parse_arid_ur},
+        dkg::common::{
+            OptionalStorageSelector, group_state_dir, parse_arid_ur,
+            signing_key_from_verifying,
+        },
         is_verbose,
         registry::participants_file_path,
         storage::StorageClient,
@@ -351,23 +348,4 @@ fn build_response_body(
         .add_assertion("participant", *participant)
         .add_assertion("key_package", CBOR::from(key_json))
         .add_assertion("public_key_package", CBOR::from(pub_json)))
-}
-
-fn signing_key_from_verifying(
-    verifying_key: &frost_ed25519::VerifyingKey,
-) -> Result<SigningPublicKey> {
-    let bytes = verifying_key.serialize().map_err(|e| {
-        anyhow::anyhow!("Failed to serialize verifying key: {e}")
-    })?;
-    let ed25519 = Ed25519PublicKey::from_data_ref(bytes)
-        .context("Group verifying key is not a valid Ed25519 public key")?;
-    Ok(SigningPublicKey::from_ed25519(ed25519))
-}
-
-fn group_state_dir(registry_path: &Path, group_id: &ARID) -> PathBuf {
-    let base = registry_path
-        .parent()
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| PathBuf::from("."));
-    base.join("group-state").join(group_id.hex())
 }

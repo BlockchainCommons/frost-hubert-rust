@@ -19,6 +19,7 @@ use crate::{
         dkg::{OptionalStorageSelector, common::parse_arid_ur},
         is_verbose,
         registry::participants_file_path,
+        sign::common::signing_state_dir,
         storage::StorageClient,
     },
     registry::Registry,
@@ -537,25 +538,4 @@ struct StartState {
     group_id: ARID,
     target_ur: String,
     participants: HashMap<XID, StartParticipant>,
-}
-
-fn signing_state_dir_for_group(
-    registry_path: &Path,
-    group_id: &ARID,
-) -> PathBuf {
-    let base = registry_path
-        .parent()
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| PathBuf::from("."));
-    base.join("group-state")
-        .join(group_id.hex())
-        .join("signing")
-}
-
-fn signing_state_dir(
-    registry_path: &Path,
-    group_id: &ARID,
-    session_id: &ARID,
-) -> PathBuf {
-    signing_state_dir_for_group(registry_path, group_id).join(session_id.hex())
 }

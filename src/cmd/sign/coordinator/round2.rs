@@ -5,11 +5,8 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{Context, Result, anyhow, bail};
-use bc_components::{
-    ARID, Digest, Ed25519PublicKey, JSON, SigningPublicKey, Verifier, XID,
-    XIDProvider,
-};
+use anyhow::{Context, Result, bail};
+use bc_components::{ARID, Digest, JSON, Verifier, XID, XIDProvider};
 use bc_envelope::prelude::*;
 use bc_xid::XIDDocument;
 use clap::Parser;
@@ -19,8 +16,11 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
-        dkg::common::parse_arid_ur, is_verbose,
-        registry::participants_file_path, storage::StorageClient,
+        dkg::common::{parse_arid_ur, signing_key_from_verifying},
+        is_verbose,
+        registry::participants_file_path,
+        sign::common::signing_state_dir,
+        storage::StorageClient,
     },
     registry::Registry,
 };
@@ -647,17 +647,6 @@ fn load_public_key_package(
     Ok(pkg)
 }
 
-fn signing_key_from_verifying(
-    verifying_key: &frost_ed25519::VerifyingKey,
-) -> Result<SigningPublicKey> {
-    let bytes = verifying_key
-        .serialize()
-        .map_err(|e| anyhow!("Failed to serialize verifying key: {e}"))?;
-    let ed25519 = Ed25519PublicKey::from_data_ref(bytes)
-        .context("Group verifying key is not a valid Ed25519 public key")?;
-    Ok(SigningPublicKey::from_ed25519(ed25519))
-}
-
 fn commitments_with_identifiers(
     commitments: &BTreeMap<XID, ParticipantCommitment>,
     xid_to_identifier: &HashMap<XID, frost::Identifier>,
@@ -740,21 +729,6 @@ fn persist_final_state(
         .with_context(|| {
             format!("Failed to write {}", dir.join("final.json").display())
         })
-}
-
-fn signing_state_dir(
-    registry_path: &Path,
-    group_id: &ARID,
-    session_id: &ARID,
-) -> PathBuf {
-    let base = registry_path
-        .parent()
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| PathBuf::from("."));
-    base.join("group-state")
-        .join(group_id.hex())
-        .join("signing")
-        .join(session_id.hex())
 }
 
 struct StartState {

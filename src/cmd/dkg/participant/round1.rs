@@ -1,7 +1,4 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{fs, path::Path};
 
 use anyhow::{Context, Result, bail};
 use bc_components::{ARID, JSON, XID, XIDProvider};
@@ -16,15 +13,14 @@ use super::receive::decode_invite_details;
 use crate::{
     cmd::{
         dkg::common::{
-            OptionalStorageSelector, build_group_participants, parse_arid_ur,
+            OptionalStorageSelector, build_group_participants,
+            group_participant_from_registry, group_state_dir, parse_arid_ur,
             resolve_sender,
         },
         registry::participants_file_path,
         storage::{StorageClient, StorageSelection},
     },
-    registry::{
-        ContributionPaths, GroupParticipant, GroupRecord, OwnerRecord, Registry,
-    },
+    registry::{ContributionPaths, GroupRecord, Registry},
 };
 
 /// Respond to a DKG invite (Round 1).
@@ -287,24 +283,6 @@ fn resolve_invite_envelope(
     parse_envelope_ur(invite)
 }
 
-fn group_participant_from_registry(
-    registry: &Registry,
-    owner: &OwnerRecord,
-    document: &bc_xid::XIDDocument,
-) -> Result<GroupParticipant> {
-    let xid = document.xid();
-    if xid == owner.xid() {
-        return Ok(GroupParticipant::new(xid));
-    }
-    if registry.participant(&xid).is_none() {
-        anyhow::bail!(
-            "Invite participant not found in registry: {}",
-            xid.ur_string()
-        );
-    }
-    Ok(GroupParticipant::new(xid))
-}
-
 fn build_response_body(
     group_id: ARID,
     participant: XID,
@@ -351,12 +329,4 @@ fn persist_round1_state(
         round2_secret: None,
         key_package: None,
     })
-}
-
-fn group_state_dir(registry_path: &Path, group_id: &ARID) -> PathBuf {
-    let base = registry_path
-        .parent()
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| PathBuf::from("."));
-    base.join("group-state").join(group_id.hex())
 }

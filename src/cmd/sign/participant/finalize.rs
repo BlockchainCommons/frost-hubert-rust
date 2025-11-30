@@ -5,10 +5,7 @@ use std::{
 };
 
 use anyhow::{Context, Result, bail};
-use bc_components::{
-    ARID, Digest, Ed25519PublicKey, JSON, SigningPublicKey, Verifier, XID,
-    XIDProvider,
-};
+use bc_components::{ARID, Digest, JSON, Verifier, XID, XIDProvider};
 use bc_envelope::prelude::*;
 use clap::Parser;
 use frost_ed25519 as frost;
@@ -17,9 +14,13 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
-        dkg::{OptionalStorageSelector, common::parse_arid_ur},
+        dkg::{
+            OptionalStorageSelector,
+            common::{parse_arid_ur, signing_key_from_verifying},
+        },
         is_verbose,
         registry::participants_file_path,
+        sign::common::signing_state_dir,
         storage::StorageClient,
     },
     registry::Registry,
@@ -620,17 +621,6 @@ fn load_public_key_package(
     );
 }
 
-fn signing_key_from_verifying(
-    verifying_key: &frost_ed25519::VerifyingKey,
-) -> Result<SigningPublicKey> {
-    let bytes = verifying_key.serialize().map_err(|e| {
-        anyhow::anyhow!("Failed to serialize verifying key: {e}")
-    })?;
-    let ed25519 = Ed25519PublicKey::from_data_ref(bytes)
-        .context("Group verifying key is not a valid Ed25519 public key")?;
-    Ok(SigningPublicKey::from_ed25519(ed25519))
-}
-
 fn persist_final_state(
     registry_path: &Path,
     group_id: &ARID,
@@ -707,21 +697,6 @@ fn persist_final_state(
     fs::write(final_path, serde_json::to_vec_pretty(&root)?).with_context(
         || format!("Failed to write {}", dir.join("final.json").display()),
     )
-}
-
-fn signing_state_dir(
-    registry_path: &Path,
-    group_id: &ARID,
-    session_id: &ARID,
-) -> PathBuf {
-    let base = registry_path
-        .parent()
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| PathBuf::from("."));
-    base.join("group-state")
-        .join(group_id.hex())
-        .join("signing")
-        .join(session_id.hex())
 }
 
 struct ReceiveState {

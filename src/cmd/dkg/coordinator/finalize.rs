@@ -1,10 +1,7 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::fs;
 
-use anyhow::{Context, Result, anyhow, bail};
-use bc_components::{ARID, Ed25519PublicKey, JSON, SigningPublicKey, XID};
+use anyhow::{Context, Result, bail};
+use bc_components::{ARID, JSON, SigningPublicKey, XID};
 use bc_envelope::prelude::*;
 use clap::Parser;
 use gstp::SealedResponse;
@@ -12,8 +9,13 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
-        dkg::common::OptionalStorageSelector, is_verbose,
-        registry::participants_file_path, storage::StorageClient,
+        dkg::common::{
+            OptionalStorageSelector, group_state_dir, parse_arid_ur,
+            signing_key_from_verifying,
+        },
+        is_verbose,
+        registry::participants_file_path,
+        storage::StorageClient,
     },
     registry::Registry,
 };
@@ -250,17 +252,6 @@ struct FinalizeEntry {
     public_key_package: frost_ed25519::keys::PublicKeyPackage,
 }
 
-fn signing_key_from_verifying(
-    verifying_key: &frost_ed25519::VerifyingKey,
-) -> Result<SigningPublicKey> {
-    let bytes = verifying_key
-        .serialize()
-        .map_err(|e| anyhow!("Failed to serialize verifying key: {e}"))?;
-    let ed25519 = Ed25519PublicKey::from_data_ref(bytes)
-        .context("Group verifying key is not a valid Ed25519 public key")?;
-    Ok(SigningPublicKey::from_ed25519(ed25519))
-}
-
 fn fetch_finalize_response(
     runtime: &Runtime,
     client: &StorageClient,
@@ -335,28 +326,4 @@ fn fetch_finalize_response(
         key_package,
         public_key_package,
     })
-}
-
-fn parse_arid_ur(input: &str) -> Result<ARID> {
-    use bc_ur::prelude::UR;
-
-    let ur = UR::from_ur_string(input)
-        .with_context(|| format!("Invalid UR string: {input}"))?;
-    if ur.ur_type_str() != "arid" {
-        bail!("Expected ur:arid, found ur:{}", ur.ur_type_str());
-    }
-    let cbor = ur.cbor();
-    ARID::try_from(cbor.clone()).or_else(|_| {
-        let bytes = CBOR::try_into_byte_string(cbor)
-            .context("ARID is not a byte string")?;
-        ARID::from_data_ref(bytes).context("Invalid ARID data")
-    })
-}
-
-fn group_state_dir(registry_path: &Path, group_id: &ARID) -> PathBuf {
-    let base = registry_path
-        .parent()
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| PathBuf::from("."));
-    base.join("group-state").join(group_id.hex())
 }

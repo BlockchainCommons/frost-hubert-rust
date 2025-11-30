@@ -1,7 +1,12 @@
-use std::collections::HashSet;
+use std::{
+    collections::HashSet,
+    path::{Path, PathBuf},
+};
 
-use anyhow::{Context, Result, bail};
-use bc_components::{ARID, XID, XIDProvider};
+use anyhow::{Context, Result, anyhow, bail};
+use bc_components::{
+    ARID, Ed25519PublicKey, SigningPublicKey, XID, XIDProvider,
+};
 use bc_envelope::prelude::*;
 use bc_ur::prelude::UR;
 use bc_xid::XIDDocument;
@@ -150,7 +155,7 @@ pub fn build_group_participants(
         .collect()
 }
 
-fn group_participant_from_registry(
+pub fn group_participant_from_registry(
     registry: &Registry,
     owner: &OwnerRecord,
     document: &XIDDocument,
@@ -237,4 +242,26 @@ pub fn parse_arid_ur(input: &str) -> Result<ARID> {
             CBOR::try_into_byte_string(cbor).context("Invalid ARID payload")?;
         ARID::from_data_ref(bytes).context("Invalid ARID payload")
     })
+}
+
+/// Returns the group state directory for a DKG group.
+/// Path: `{registry_dir}/group-state/{group_id.hex()}`
+pub fn group_state_dir(registry_path: &Path, group_id: &ARID) -> PathBuf {
+    let base = registry_path
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."));
+    base.join("group-state").join(group_id.hex())
+}
+
+/// Converts a FROST Ed25519 verifying key to a `SigningPublicKey`.
+pub fn signing_key_from_verifying(
+    verifying_key: &frost_ed25519::VerifyingKey,
+) -> Result<SigningPublicKey> {
+    let bytes = verifying_key
+        .serialize()
+        .map_err(|e| anyhow!("Failed to serialize verifying key: {e}"))?;
+    let ed25519 = Ed25519PublicKey::from_data_ref(bytes)
+        .context("Group verifying key is not a valid Ed25519 public key")?;
+    Ok(SigningPublicKey::from_ed25519(ed25519))
 }

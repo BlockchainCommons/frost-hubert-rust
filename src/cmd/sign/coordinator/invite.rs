@@ -1,9 +1,4 @@
-use std::{
-    collections::HashMap,
-    fs,
-    path::{Path, PathBuf},
-    time::Duration,
-};
+use std::{collections::HashMap, fs, time::Duration};
 
 use anyhow::{Context, Result, bail};
 use bc_components::{ARID, Digest, XID};
@@ -15,7 +10,9 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
-        is_verbose, registry::participants_file_path, storage::StorageClient,
+        dkg::common::parse_arid_ur, is_verbose,
+        registry::participants_file_path, sign::common::signing_state_dir,
+        storage::StorageClient,
     },
     registry::{GroupParticipant, Registry},
 };
@@ -271,35 +268,4 @@ fn load_envelope_from_path(path: &str) -> Result<Envelope> {
     let trimmed = data.trim();
     Envelope::from_ur_string(trimmed)
         .with_context(|| "Target envelope is not a valid UR".to_string())
-}
-
-fn parse_arid_ur(input: &str) -> Result<ARID> {
-    use bc_ur::prelude::UR;
-
-    let ur = UR::from_ur_string(input)
-        .with_context(|| format!("Invalid UR string: {input}"))?;
-    if ur.ur_type_str() != "arid" {
-        bail!("Expected ur:arid, found ur:{}", ur.ur_type_str());
-    }
-    let cbor = ur.cbor();
-    ARID::try_from(cbor.clone()).or_else(|_| {
-        let bytes = CBOR::try_into_byte_string(cbor)
-            .context("ARID is not a byte string")?;
-        ARID::from_data_ref(bytes).context("Invalid ARID data")
-    })
-}
-
-fn signing_state_dir(
-    registry_path: &Path,
-    group_id: &ARID,
-    session_id: &ARID,
-) -> PathBuf {
-    let base = registry_path
-        .parent()
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| PathBuf::from("."));
-    base.join("group-state")
-        .join(group_id.hex())
-        .join("signing")
-        .join(session_id.hex())
 }

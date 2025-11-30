@@ -1,8 +1,4 @@
-use std::{
-    collections::BTreeMap,
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{collections::BTreeMap, fs};
 
 use anyhow::{Context, Result, bail};
 use bc_components::{ARID, JSON, XID, XIDProvider};
@@ -17,7 +13,9 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
-        dkg::common::{OptionalStorageSelector, parse_arid_ur},
+        dkg::common::{
+            OptionalStorageSelector, group_state_dir, parse_arid_ur,
+        },
         is_verbose,
         registry::participants_file_path,
         storage::StorageClient,
@@ -416,12 +414,4 @@ fn build_response_body(
     }
 
     Ok(envelope)
-}
-
-fn group_state_dir(registry_path: &Path, group_id: &ARID) -> PathBuf {
-    let base = registry_path
-        .parent()
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| PathBuf::from("."));
-    base.join("group-state").join(group_id.hex())
 }

@@ -21,6 +21,7 @@ use crate::{
         dkg::{OptionalStorageSelector, common::parse_arid_ur},
         is_verbose,
         registry::participants_file_path,
+        sign::common::signing_state_dir,
         storage::StorageClient,
     },
     registry::Registry,
@@ -661,21 +662,6 @@ fn load_commit_state(
         signing_nonces,
         signing_commitments,
     })
-}
-
-fn signing_state_dir(
-    registry_path: &Path,
-    group_id: &ARID,
-    session_id: &ARID,
-) -> PathBuf {
-    let base = registry_path
-        .parent()
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| PathBuf::from("."));
-    base.join("group-state")
-        .join(group_id.hex())
-        .join("signing")
-        .join(session_id.hex())
 }
 
 struct ReceiveState {
