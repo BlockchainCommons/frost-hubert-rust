@@ -196,8 +196,6 @@ impl CommandArgs {
                     collection.display_path.display(),
                     collection.next_response_arids.len()
                 );
-            } else {
-                println!("{}", collection.display_path.display());
             }
         }
 
