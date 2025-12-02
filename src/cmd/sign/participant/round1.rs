@@ -258,7 +258,7 @@ impl CommandArgs {
             &client,
             &receive_state.response_arid,
             &response_envelope,
-            "Coordinator",
+            "Commitments",
         )?;
 
         // On reject, clear listening ARID

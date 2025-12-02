@@ -328,7 +328,7 @@ impl CommandArgs {
             &client,
             &response_arid,
             &response_envelope,
-            "Coordinator",
+            "Signature Share",
         )?;
 
         persist_share_state(

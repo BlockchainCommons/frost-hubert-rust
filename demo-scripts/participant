@@ -2,44 +2,64 @@
 
 source config
 NAME=$1
-INVITE_ARID=$2
+OPERATION=$2
+INVITE_ARID=$3
 
 REGISTRY=demo/$NAME/registry.json
 
-section "🔑 Retrive invite for $NAME's DKG group from Hubert '$STORAGE'..."
+dkg() {
+    section "🔑 Retrive invite for $NAME's DKG group from Hubert '$STORAGE'..."
 
-INVITE=$(\
-    frost dkg participant receive \
-    --info \
-    --storage $STORAGE \
-    --timeout $TIMEOUT \
-    --registry "$REGISTRY" \
-    "${INVITE_ARID}"
-)
+    INVITE=$(\
+        frost dkg participant receive \
+        --info \
+        --storage $STORAGE \
+        --timeout $TIMEOUT \
+        --registry "$REGISTRY" \
+        "${INVITE_ARID}"
+    )
 
-section "🔑 Post round 1 response for $NAME's DKG group..."
+    section "🔑 Post round 1 response for $NAME's DKG group..."
 
-frost dkg participant round1 \
-    --storage $STORAGE \
-    --registry "$REGISTRY" \
-    "${INVITE_ARID}"
+    frost dkg participant round1 \
+        --storage $STORAGE \
+        --registry "$REGISTRY" \
+        "${INVITE_ARID}"
 
-section "🔑 Fetch Round 2 request, run FROST DKG part2 with Round 1 secret and all Round 1 packages, post Round 2 packages..."
+    section "🔑 Fetch Round 2 request, run FROST DKG part2 with Round 1 secret and all Round 1 packages, post Round 2 packages..."
 
-GROUP_ID=$(jq -r '.groups | keys[0]' $REGISTRY)
+    GROUP_ID=$(jq -r '.groups | keys[0]' $REGISTRY)
 
-frost dkg participant round2 \
-    --storage $STORAGE \
-    --timeout $TIMEOUT \
-    --registry "$REGISTRY" \
-    "${GROUP_ID}"
+    frost dkg participant round2 \
+        --storage $STORAGE \
+        --timeout $TIMEOUT \
+        --registry "$REGISTRY" \
+        "${GROUP_ID}"
 
-section "🔑 Finalize DKG for $NAME's DKG group on Hubert '$STORAGE'..."
+    section "🔑 Finalize DKG for $NAME's DKG group on Hubert '$STORAGE'..."
 
-frost dkg participant finalize \
-    --storage $STORAGE \
-    --timeout $TIMEOUT \
-    --registry "$REGISTRY" \
-    "${GROUP_ID}"
+    frost dkg participant finalize \
+        --storage $STORAGE \
+        --timeout $TIMEOUT \
+        --registry "$REGISTRY" \
+        "${GROUP_ID}"
 
-section "🔑 DKG Complete!"
+    section "🔑 DKG Complete!"
+}
+
+sign() {
+    # Placeholder for signing ceremony
+}
+
+case "$OPERATION" in
+    dkg)
+        dkg
+        ;;
+    sign)
+        sign
+        ;;
+    *)
+        echo "Error: Invalid operation '$OPERATION'. Use 'dkg' or 'sign'." >&2
+        exit 1
+        ;;
+esac

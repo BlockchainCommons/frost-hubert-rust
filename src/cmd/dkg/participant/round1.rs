@@ -234,7 +234,7 @@ impl CommandArgs {
                 &client,
                 &response_target,
                 &response_envelope,
-                "Coordinator",
+                "Round 1 Response",
             )?;
         } else if self.preview {
             // Show the GSTP response structure without encryption

@@ -1,3 +1,5 @@
 #!/bin/zsh
 
-./participant carol $1
+OPERATION=$1
+INVITE_ARID=$2
+./participant carol $OPERATION $INVITE_ARID

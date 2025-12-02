@@ -309,7 +309,7 @@ impl CommandArgs {
             &client,
             &response_arid,
             &response_envelope,
-            "Coordinator",
+            "Finalize Response",
         )?;
 
         // Update registry contributions

@@ -262,7 +262,7 @@ impl CommandArgs {
             &client,
             &response_arid,
             &response_envelope,
-            "Coordinator",
+            "Round 2 Response",
         )?;
 
         // Update contributions in registry
