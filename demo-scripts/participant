@@ -48,7 +48,45 @@ dkg() {
 }
 
 sign() {
-    # Placeholder for signing ceremony
+    section "📝 Retrieve signing invite for $NAME from Hubert '$STORAGE'..."
+
+    frost sign participant receive \
+        --info \
+        --storage $STORAGE \
+        --timeout $TIMEOUT \
+        --registry "$REGISTRY" \
+        "${INVITE_ARID}"
+
+    section "📝 Post Round 1 response for $NAME..."
+
+    SESSION_ID=$(frost sign participant receive \
+        --storage $STORAGE \
+        --timeout $TIMEOUT \
+        --registry "$REGISTRY" \
+        "${INVITE_ARID}" | tail -n1)
+
+    frost sign participant round1 \
+        --storage $STORAGE \
+        --registry "$REGISTRY" \
+        "${SESSION_ID}"
+
+    section "📝 Fetch Round 2 request and post signature share..."
+
+    frost sign participant round2 \
+        --storage $STORAGE \
+        --timeout $TIMEOUT \
+        --registry "$REGISTRY" \
+        "${SESSION_ID}"
+
+    section "📝 Finalize and attach aggregated signature..."
+
+    frost sign participant finalize \
+        --storage $STORAGE \
+        --timeout $TIMEOUT \
+        --registry "$REGISTRY" \
+        "${SESSION_ID}"
+
+    section "📝 Signing Complete!"
 }
 
 case "$OPERATION" in

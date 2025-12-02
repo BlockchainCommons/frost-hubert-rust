@@ -14,6 +14,7 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
+        busy::get_with_indicator,
         dkg::{
             OptionalStorageSelector,
             common::{parse_arid_ur, signing_key_from_verifying},
@@ -302,12 +303,14 @@ fn fetch_finalize_event(
         StorageClient::from_selection(selection.clone()).await
     })?;
 
-    let finalize_envelope = runtime.block_on(async {
-        client
-            .get(finalize_arid, timeout)
-            .await?
-            .context("Finalize package not found in Hubert storage")
-    })?;
+    let finalize_envelope = get_with_indicator(
+        &runtime,
+        &client,
+        finalize_arid,
+        "Finalize package",
+        timeout,
+    )?
+    .context("Finalize package not found in Hubert storage")?;
 
     let signer_keys = owner
         .xid_document()

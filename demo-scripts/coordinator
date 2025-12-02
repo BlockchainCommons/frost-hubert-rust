@@ -51,7 +51,44 @@ dkg() {
 }
 
 sign() {
-    # Placeholder for signing ceremony
+    section "🔑 Create target envelope and post signing invite to Hubert '$STORAGE'..."
+
+    BASE_ENVELOPE=$(envelope subject type string "FROST signing demo target")
+    TARGET_ENVELOPE=$(echo "${BASE_ENVELOPE}" | envelope assertion add pred-obj string purpose string "threshold signing demo")
+    WRAPPED_TARGET=$(envelope subject type wrapped "${TARGET_ENVELOPE}")
+    echo "${WRAPPED_TARGET}" > demo/target-envelope.ur
+
+    GROUP_ID=$(jq -r '.groups | keys[0]' "$REGISTRY")
+    INVITE_ARID=$(\
+        frost sign coordinator invite \
+        --storage $STORAGE \
+        --registry "$REGISTRY" \
+        --target demo/target-envelope.ur \
+        "${GROUP_ID}"\
+    )
+    echo "\n\n${INVITE_ARID}\n"
+
+    section "📝 Collect Round 1 responses and dispatch Round 2..."
+
+    START_PATH=$(ls -t demo/alice/group-state/*/signing/*/start.json | head -n1)
+    SESSION_ID=$(jq -r '.session_id' "${START_PATH}")
+    frost sign coordinator round1 \
+        --parallel \
+        --storage $STORAGE \
+        --timeout $TIMEOUT \
+        --registry "$REGISTRY" \
+        "${SESSION_ID}"
+
+    section "📝 Collect Round 2 responses and finalize signing..."
+
+    frost sign coordinator round2 \
+        --parallel \
+        --storage $STORAGE \
+        --timeout $TIMEOUT \
+        --registry "$REGISTRY" \
+        "${SESSION_ID}"
+
+    section "📝 Signing Complete!"
 }
 
 case "$OPERATION" in
