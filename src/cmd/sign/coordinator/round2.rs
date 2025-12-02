@@ -19,7 +19,10 @@ use crate::{
         busy::{get_with_indicator, put_with_indicator},
         dkg::common::{parse_arid_ur, signing_key_from_verifying},
         is_verbose,
-        parallel::{CollectionResult, ParallelFetchConfig, parallel_fetch},
+        parallel::{
+            CollectionResult, ParallelFetchConfig, parallel_fetch,
+            parallel_send,
+        },
         registry::participants_file_path,
         sign::common::{SignFinalizeContent, signing_state_dir},
         storage::StorageClient,
@@ -169,12 +172,10 @@ impl CommandArgs {
                 fin_arids.insert(xid, data.finalize_arid);
             }
 
-            // Continue with sequential finalize dispatch
-            let client = Arc::try_unwrap(client)
-                .map_err(|_| anyhow::anyhow!("Failed to unwrap client"))?;
+            // Continue with parallel finalize dispatch
             process_aggregation_and_finalize(
                 &runtime,
-                &client,
+                client,
                 &registry,
                 &owner,
                 &registry_path,
@@ -187,6 +188,7 @@ impl CommandArgs {
                 by_xid,
                 fin_arids,
                 self.preview_finalize,
+                true, // parallel
             )?;
 
             return Ok(());
@@ -337,6 +339,9 @@ impl CommandArgs {
                 "Dispatching finalize packages to {} participants...",
                 finalize_arids.len()
             );
+        } else {
+            // Blank line to separate get phase from put phase
+            eprintln!();
         }
 
         let mut preview_printed = false;
@@ -966,7 +971,7 @@ fn validate_and_extract_share_response(
 #[allow(clippy::too_many_arguments)]
 fn process_aggregation_and_finalize(
     runtime: &Runtime,
-    client: &StorageClient,
+    client: Arc<StorageClient>,
     registry: &Registry,
     owner: &crate::registry::OwnerRecord,
     registry_path: &Path,
@@ -982,6 +987,7 @@ fn process_aggregation_and_finalize(
     signature_shares_by_xid: BTreeMap<XID, frost::round2::SignatureShare>,
     finalize_arids: HashMap<XID, ARID>,
     preview_finalize: bool,
+    parallel: bool,
 ) -> Result<()> {
     if signature_shares_by_identifier.len() < start_state.min_signers {
         bail!(
@@ -1073,6 +1079,8 @@ fn process_aggregation_and_finalize(
         );
     }
 
+    // Build all finalize messages
+    let mut messages: Vec<(XID, ARID, Envelope, String)> = Vec::new();
     let mut preview_printed = false;
     for (participant, finalize_arid) in &finalize_arids {
         let participant_name = registry
@@ -1113,13 +1121,41 @@ fn process_aggregation_and_finalize(
             &[&recipient_doc],
         )?;
 
-        put_with_indicator(
-            runtime,
-            client,
-            finalize_arid,
-            &sealed,
-            &participant_name,
-        )?;
+        messages.push((*participant, *finalize_arid, sealed, participant_name));
+    }
+
+    // Dispatch messages - parallel or sequential
+    if parallel {
+        // Blank line to separate get phase from put phase
+        eprintln!();
+
+        let results =
+            runtime.block_on(async { parallel_send(client, messages).await });
+
+        // Check for errors
+        let mut errors = Vec::new();
+        for (xid, result) in results {
+            if let Err(e) = result {
+                let name = registry
+                    .participant(&xid)
+                    .and_then(|r| r.pet_name().map(|s| s.to_owned()))
+                    .unwrap_or_else(|| xid.ur_string());
+                errors.push(format!("{}: {}", name, e));
+            }
+        }
+        if !errors.is_empty() {
+            bail!("Failed to send finalize packages: {}", errors.join("; "));
+        }
+    } else {
+        for (_, finalize_arid, sealed, participant_name) in messages {
+            put_with_indicator(
+                runtime,
+                &client,
+                &finalize_arid,
+                &sealed,
+                &participant_name,
+            )?;
+        }
     }
 
     // Print the final signature and signed envelope UR after all dispatches

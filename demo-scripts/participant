@@ -50,20 +50,18 @@ dkg() {
 sign() {
     section "📝 Retrieve signing invite for $NAME from Hubert '$STORAGE'..."
 
-    frost sign participant receive \
+    INFO=$(frost sign participant receive \
         --info \
         --storage $STORAGE \
         --timeout $TIMEOUT \
         --registry "$REGISTRY" \
-        "${INVITE_ARID}"
+        "${INVITE_ARID}" \
+    )
+    echo $INFO
+
+    SESSION_ID=$(echo "$INFO" | tail -n 1)
 
     section "📝 Post Round 1 response for $NAME..."
-
-    SESSION_ID=$(frost sign participant receive \
-        --storage $STORAGE \
-        --timeout $TIMEOUT \
-        --registry "$REGISTRY" \
-        "${INVITE_ARID}" | tail -n1)
 
     frost sign participant round1 \
         --storage $STORAGE \

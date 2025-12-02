@@ -382,6 +382,9 @@ fn dispatch_round2_requests(
             "Sending Round 2 requests to {} participants...",
             participant_info.len()
         );
+    } else {
+        // Blank line to separate get phase from put phase
+        eprintln!();
     }
 
     let mut preview_output: Option<(String, String)> = None;
@@ -801,6 +804,9 @@ async fn dispatch_round2_requests_parallel(
             participant_name,
         ));
     }
+
+    // Blank line to separate get phase from put phase
+    eprintln!();
 
     // Send all messages in parallel
     let send_results = parallel_send(client, messages).await;

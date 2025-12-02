@@ -266,6 +266,9 @@ impl CommandArgs {
                     "Dispatching signRound2 requests to {} participants...",
                     send_to_arids.len()
                 );
+            } else {
+                // Blank line to separate get phase from put phase
+                eprintln!();
             }
 
             let mut preview_printed = false;
@@ -348,8 +351,6 @@ impl CommandArgs {
                     "Dispatched {} signRound2 requests.",
                     commitments.len()
                 );
-            } else {
-                println!("{}", display_path.display());
             }
         }
 
@@ -886,6 +887,9 @@ fn process_sign_round1_collection(
         ));
     }
 
+    // Blank line to separate get phase from put phase
+    eprintln!();
+
     let send_results =
         runtime.block_on(async { parallel_send(client, messages).await });
 
@@ -924,8 +928,6 @@ fn process_sign_round1_collection(
             "Dispatched {} signRound2 requests.",
             collection.successes.len()
         );
-    } else {
-        println!("{}", display_path.display());
     }
 
     Ok(())

@@ -51,7 +51,7 @@ dkg() {
 }
 
 sign() {
-    section "🔑 Create target envelope and post signing invite to Hubert '$STORAGE'..."
+    section "📝 Create target envelope and post signing invite to Hubert '$STORAGE'..."
 
     BASE_ENVELOPE=$(envelope subject type string "FROST signing demo target")
     TARGET_ENVELOPE=$(echo "${BASE_ENVELOPE}" | envelope assertion add pred-obj string purpose string "threshold signing demo")
