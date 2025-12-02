@@ -18,6 +18,7 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
+        busy::put_with_indicator,
         dkg::{OptionalStorageSelector, common::parse_arid_ur},
         is_verbose,
         registry::participants_file_path,
@@ -252,11 +253,13 @@ impl CommandArgs {
             );
         }
 
-        runtime.block_on(async {
-            client
-                .put(&receive_state.response_arid, &response_envelope)
-                .await
-        })?;
+        put_with_indicator(
+            &runtime,
+            &client,
+            &receive_state.response_arid,
+            &response_envelope,
+            "Coordinator",
+        )?;
 
         // On reject, clear listening ARID
         if self.reject_reason.is_some() {

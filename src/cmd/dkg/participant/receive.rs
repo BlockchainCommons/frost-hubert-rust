@@ -9,6 +9,7 @@ use tokio::runtime::Runtime;
 use crate::{
     DkgInvitation,
     cmd::{
+        busy::get_with_indicator,
         dkg::common::{
             OptionalStorageSelector, parse_arid_ur, parse_envelope_ur,
             participant_names_from_registry, resolve_sender,
@@ -126,13 +127,13 @@ fn resolve_invite_envelope(
     if let Some(selection) = selection {
         if let Ok(arid) = parse_arid_ur(invite) {
             let runtime = Runtime::new()?;
-            return runtime.block_on(async move {
-                let client = StorageClient::from_selection(selection).await?;
-                client
-                    .get(&arid, timeout)
-                    .await?
-                    .context("Invite not found in Hubert storage")
-            });
+            let client = runtime.block_on(async {
+                StorageClient::from_selection(selection).await
+            })?;
+            return get_with_indicator(
+                &runtime, &client, &arid, "Invite", timeout,
+            )?
+            .context("Invite not found in Hubert storage");
         }
         if timeout.is_some() {
             bail!(

@@ -794,11 +794,13 @@ async fn dispatch_finalize_requests_parallel(
         Date::with_duration_from_now(Duration::from_secs(60 * 60));
 
     // Build all_packages map for gather_packages_for_recipient
-    let all_packages: HashMap<XID, Vec<(XID, frost::keys::dkg::round2::Package)>> =
-        successes
-            .iter()
-            .map(|(xid, data)| (*xid, data.packages.clone()))
-            .collect();
+    let all_packages: HashMap<
+        XID,
+        Vec<(XID, frost::keys::dkg::round2::Package)>,
+    > = successes
+        .iter()
+        .map(|(xid, data)| (*xid, data.packages.clone()))
+        .collect();
 
     // Build messages
     let mut messages: Vec<(XID, ARID, Envelope, String)> = Vec::new();

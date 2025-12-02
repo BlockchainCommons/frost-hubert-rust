@@ -16,6 +16,7 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
+        busy::{get_with_indicator, put_with_indicator},
         dkg::common::{
             OptionalStorageSelector, group_state_dir, parse_arid_ur,
         },
@@ -260,10 +261,6 @@ fn fetch_all_round1_packages(
             })
             .unwrap_or_else(|| participant_xid.ur_string());
 
-        if is_verbose() {
-            eprintln!("{}...", participant_name);
-        }
-
         match fetch_and_validate_response(
             ctx.runtime,
             ctx.client,
@@ -271,13 +268,13 @@ fn fetch_all_round1_packages(
             timeout,
             ctx.owner_doc,
             ctx.group_id,
+            &participant_name,
         ) {
             Ok((package, next_arid)) => {
                 round1_packages.push((*participant_xid, package));
                 next_response_arids.push((*participant_xid, next_arid));
             }
             Err(e) => {
-                eprintln!("error: {}", e);
                 errors.push((*participant_xid, e.to_string()));
             }
         }
@@ -398,10 +395,6 @@ fn dispatch_round2_requests(
             .and_then(|r| r.pet_name().map(|s| s.to_owned()))
             .unwrap_or_else(|| xid.ur_string());
 
-        if is_verbose() {
-            eprintln!("{}...", participant_name);
-        }
-
         let request = build_round2_request_for_participant(
             ctx.owner_doc,
             ctx.group_id,
@@ -425,9 +418,13 @@ fn dispatch_round2_requests(
             &[recipient_doc],
         )?;
 
-        ctx.runtime.block_on(async {
-            ctx.client.put(send_to_arid, &sealed_envelope).await
-        })?;
+        put_with_indicator(
+            ctx.runtime,
+            ctx.client,
+            send_to_arid,
+            &sealed_envelope,
+            &participant_name,
+        )?;
     }
 
     update_pending_for_round2_collection(ctx, &participant_info)?;
@@ -518,13 +515,16 @@ fn fetch_and_validate_response(
     timeout: Option<u64>,
     coordinator: &XIDDocument,
     expected_group_id: &ARID,
+    participant_name: &str,
 ) -> Result<(frost::keys::dkg::round1::Package, ARID)> {
-    let envelope = runtime.block_on(async {
-        client
-            .get(response_arid, timeout)
-            .await?
-            .context("Response not found in Hubert storage")
-    })?;
+    let envelope = get_with_indicator(
+        runtime,
+        client,
+        response_arid,
+        participant_name,
+        timeout,
+    )?
+    .context("Response not found in Hubert storage")?;
 
     let coordinator_private_keys =
         coordinator.inception_private_keys().ok_or_else(|| {

@@ -18,6 +18,7 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
+        busy::{get_with_indicator, put_with_indicator},
         dkg::{OptionalStorageSelector, common::parse_arid_ur},
         is_verbose,
         registry::participants_file_path,
@@ -165,12 +166,14 @@ impl CommandArgs {
             StorageClient::from_selection(selection).await
         })?;
 
-        let request_envelope = runtime.block_on(async {
-            client
-                .get(&listening_at_arid, self.timeout)
-                .await?
-                .context("signRound2 request not found in Hubert storage")
-        })?;
+        let request_envelope = get_with_indicator(
+            &runtime,
+            &client,
+            &listening_at_arid,
+            "signRound2 request",
+            self.timeout,
+        )?
+        .context("signRound2 request not found in Hubert storage")?;
 
         let signer_private_keys = owner
             .xid_document()
@@ -320,9 +323,13 @@ impl CommandArgs {
             Some(&coordinator_doc),
         )?;
 
-        runtime.block_on(async {
-            client.put(&response_arid, &response_envelope).await
-        })?;
+        put_with_indicator(
+            &runtime,
+            &client,
+            &response_arid,
+            &response_envelope,
+            "Coordinator",
+        )?;
 
         persist_share_state(
             &registry_path,

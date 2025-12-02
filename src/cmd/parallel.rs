@@ -8,8 +8,23 @@
 //! The Hubert `KvStore` trait uses `#[async_trait(?Send)]`, meaning its
 //! futures are not `Send` and cannot be spawned across threads. Instead,
 //! we use `tokio::task::LocalSet` to run concurrent tasks on the same thread.
+//!
+//! # Visual Indicators
+//!
+//! - ⬇️ prefix for get (download) operations with countdown timer
+//! - ⬆️ prefix for put (upload) operations with count-up timer
+//! - 🔄 animated spinner while in progress
+//! - ✅ on success, ❌ on failure
 
-use std::{collections::HashMap, io::IsTerminal, sync::Arc, time::Duration};
+use std::{
+    collections::HashMap,
+    io::IsTerminal,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, AtomicU64, Ordering},
+    },
+    time::Duration,
+};
 
 use anyhow::Result;
 use bc_components::{ARID, XID};
@@ -91,32 +106,95 @@ impl<T> CollectionResult<T> {
     }
 }
 
+/// Direction of the operation (get or put).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Direction {
+    /// Downloading from storage (⬇️)
+    Get,
+    /// Uploading to storage (⬆️)
+    Put,
+}
+
+impl Direction {
+    /// Get the emoji prefix for this direction.
+    pub fn emoji(&self) -> &'static str {
+        match self {
+            Direction::Get => "⬇️",
+            Direction::Put => "⬆️",
+        }
+    }
+}
+
 /// Progress display for parallel operations.
 pub struct ProgressDisplay {
     #[allow(dead_code)]
     multi: MultiProgress,
-    bars: HashMap<XID, ProgressBar>,
+    bars: HashMap<XID, (ProgressBar, String)>,
     countdown_bar: ProgressBar,
     start_time: Instant,
     timeout_seconds: u64,
+    direction: Direction,
+    stop_flag: Arc<AtomicBool>,
+    elapsed_tracker: Arc<AtomicU64>,
 }
 
 impl ProgressDisplay {
+    /// Create a new progress display for get operations (with countdown).
+    pub fn new_get(
+        participants: &[(XID, String)],
+        timeout_seconds: u64,
+    ) -> Self {
+        Self::new_internal(participants, timeout_seconds, Direction::Get)
+    }
+
+    /// Create a new progress display for put operations (with count-up).
+    pub fn new_put(participants: &[(XID, String)]) -> Self {
+        Self::new_internal(participants, 60, Direction::Put)
+    }
+
     /// Create a new progress display for the given participants.
     pub fn new(participants: &[(XID, String)], timeout_seconds: u64) -> Self {
-        let multi = MultiProgress::new();
+        // Default to Get for backward compatibility
+        Self::new_internal(participants, timeout_seconds, Direction::Get)
+    }
 
-        let style_pending = ProgressStyle::default_spinner()
-            .template("{spinner:.yellow} {msg}")
-            .expect("valid template");
+    fn new_internal(
+        participants: &[(XID, String)],
+        timeout_seconds: u64,
+        direction: Direction,
+    ) -> Self {
+        let multi = MultiProgress::new();
+        let stop_flag = Arc::new(AtomicBool::new(false));
+        let elapsed_tracker = Arc::new(AtomicU64::new(0));
+        let start_time = Instant::now();
 
         let mut bars = HashMap::new();
         for (xid, name) in participants {
             let bar = multi.add(ProgressBar::new_spinner());
-            bar.set_style(style_pending.clone());
-            bar.set_message(name.clone());
+            let template = match direction {
+                Direction::Get => {
+                    format!(
+                        "{}  {{spinner:.yellow}} {}... {}s",
+                        direction.emoji(),
+                        name,
+                        timeout_seconds
+                    )
+                }
+                Direction::Put => {
+                    format!(
+                        "{}  {{spinner:.yellow}} {}... 0s",
+                        direction.emoji(),
+                        name
+                    )
+                }
+            };
+            bar.set_style(
+                ProgressStyle::default_spinner()
+                    .template(&template)
+                    .expect("valid template"),
+            );
             bar.enable_steady_tick(Duration::from_millis(100));
-            bars.insert(*xid, bar);
+            bars.insert(*xid, (bar, name.clone()));
         }
 
         // Add countdown bar at the bottom
@@ -126,25 +204,112 @@ impl ProgressDisplay {
                 .template("{msg}")
                 .expect("valid template"),
         );
-        countdown_bar
-            .set_message(format!("Waiting... {}s remaining", timeout_seconds));
+        let countdown_msg = match direction {
+            Direction::Get => {
+                format!("Waiting... {}s remaining", timeout_seconds)
+            }
+            Direction::Put => "Sending...".to_string(),
+        };
+        countdown_bar.set_message(countdown_msg);
         countdown_bar.enable_steady_tick(Duration::from_secs(1));
 
         Self {
             multi,
             bars,
             countdown_bar,
-            start_time: Instant::now(),
+            start_time,
             timeout_seconds,
+            direction,
+            stop_flag,
+            elapsed_tracker,
         }
     }
 
+    /// Start a background timer update thread.
+    pub fn start_timer_updates(&self) {
+        let bars: Vec<_> = self
+            .bars
+            .iter()
+            .map(|(xid, (bar, name))| (*xid, bar.clone(), name.clone()))
+            .collect();
+        let countdown_bar = self.countdown_bar.clone();
+        let timeout = self.timeout_seconds;
+        let direction = self.direction;
+        let stop_flag = Arc::clone(&self.stop_flag);
+        let elapsed_tracker = Arc::clone(&self.elapsed_tracker);
+        let start = self.start_time;
+
+        std::thread::spawn(move || {
+            while !stop_flag.load(Ordering::Relaxed) {
+                std::thread::sleep(Duration::from_secs(1));
+                if stop_flag.load(Ordering::Relaxed) {
+                    break;
+                }
+                let elapsed = start.elapsed().as_secs();
+                elapsed_tracker.store(elapsed, Ordering::Relaxed);
+
+                // Update countdown/countup bar
+                let msg = match direction {
+                    Direction::Get => {
+                        let remaining = timeout.saturating_sub(elapsed);
+                        format!("Waiting... {}s remaining", remaining)
+                    }
+                    Direction::Put => {
+                        format!("Sending... {}s", elapsed)
+                    }
+                };
+                countdown_bar.set_message(msg);
+
+                // Update individual bars that are still pending
+                for (_xid, bar, name) in &bars {
+                    if !bar.is_finished() {
+                        let template = match direction {
+                            Direction::Get => {
+                                let remaining = timeout.saturating_sub(elapsed);
+                                format!(
+                                    "{}  {{spinner:.yellow}} {}... {}s",
+                                    direction.emoji(),
+                                    name,
+                                    remaining
+                                )
+                            }
+                            Direction::Put => {
+                                format!(
+                                    "{}  {{spinner:.yellow}} {}... {}s",
+                                    direction.emoji(),
+                                    name,
+                                    elapsed
+                                )
+                            }
+                        };
+                        bar.set_style(
+                            ProgressStyle::default_spinner()
+                                .template(&template)
+                                .expect("valid template"),
+                        );
+                    }
+                }
+            }
+        });
+    }
+
+    /// Get the current elapsed time in seconds.
+    pub fn elapsed_seconds(&self) -> u64 { self.start_time.elapsed().as_secs() }
+
     /// Mark a participant as successful.
     pub fn mark_success(&self, xid: &XID) {
-        if let Some(bar) = self.bars.get(xid) {
+        if let Some((bar, name)) = self.bars.get(xid) {
+            let elapsed = self.elapsed_seconds();
+            // Both get and put show elapsed time on success
+            let template = format!(
+                "{}  ✅ {}: {}s",
+                self.direction.emoji(),
+                name,
+                elapsed
+            );
             bar.set_style(
                 ProgressStyle::default_spinner()
-                    .template("✅ {msg}")
+                    .template(&template)
                     .expect("valid template"),
             );
             bar.finish();
@@ -153,14 +318,28 @@ impl ProgressDisplay {
 
     /// Mark a participant as failed with an error message.
     pub fn mark_error(&self, xid: &XID, error: &str) {
-        if let Some(bar) = self.bars.get(xid) {
-            let current_msg = bar.message();
+        if let Some((bar, name)) = self.bars.get(xid) {
+            let template =
+                format!("{}  ❌ {}: {}", self.direction.emoji(), name, error);
             bar.set_style(
                 ProgressStyle::default_spinner()
-                    .template("❌ {msg}")
+                    .template(&template)
                     .expect("valid template"),
             );
-            bar.set_message(format!("{} - {}", current_msg, error));
+            bar.finish();
+        }
+    }
+
+    /// Mark a participant as timed out.
+    pub fn mark_timeout(&self, xid: &XID) {
+        if let Some((bar, name)) = self.bars.get(xid) {
+            let template =
+                format!("{}  ❌ {}: Timeout", self.direction.emoji(), name);
+            bar.set_style(
+                ProgressStyle::default_spinner()
+                    .template(&template)
+                    .expect("valid template"),
+            );
             bar.finish();
         }
     }
@@ -168,14 +347,22 @@ impl ProgressDisplay {
     /// Update the countdown display.
     pub fn update_countdown(&self) {
         let elapsed = self.start_time.elapsed().as_secs();
-        let remaining = self.timeout_seconds.saturating_sub(elapsed);
-        self.countdown_bar
-            .set_message(format!("Waiting... {}s remaining", remaining));
+        let msg = match self.direction {
+            Direction::Get => {
+                let remaining = self.timeout_seconds.saturating_sub(elapsed);
+                format!("Waiting... {}s remaining", remaining)
+            }
+            Direction::Put => {
+                format!("Sending... {}s", elapsed)
+            }
+        };
+        self.countdown_bar.set_message(msg);
     }
 
     /// Finish all progress bars.
     pub fn finish(&self) {
-        for bar in self.bars.values() {
+        self.stop_flag.store(true, Ordering::Relaxed);
+        for (bar, _) in self.bars.values() {
             bar.finish();
         }
         self.countdown_bar.finish_and_clear();
@@ -184,7 +371,8 @@ impl ProgressDisplay {
     /// Clear all progress bars without marking complete.
     #[allow(dead_code)]
     pub fn clear(&self) {
-        for bar in self.bars.values() {
+        self.stop_flag.store(true, Ordering::Relaxed);
+        for (bar, _) in self.bars.values() {
             bar.finish_and_clear();
         }
         self.countdown_bar.finish_and_clear();
@@ -193,33 +381,56 @@ impl ProgressDisplay {
 
 /// Streaming output for non-interactive terminals.
 pub struct StreamingOutput {
+    direction: Direction,
+    #[allow(dead_code)]
     verbose: bool,
 }
 
 impl StreamingOutput {
-    /// Create a new streaming output.
-    pub fn new(verbose: bool) -> Self { Self { verbose } }
+    /// Create a new streaming output for get operations.
+    pub fn new_get(verbose: bool) -> Self {
+        Self { direction: Direction::Get, verbose }
+    }
+
+    /// Create a new streaming output for put operations.
+    pub fn new_put(verbose: bool) -> Self {
+        Self { direction: Direction::Put, verbose }
+    }
+
+    /// Create a new streaming output (defaults to Get for backward
+    /// compatibility).
+    pub fn new(verbose: bool) -> Self { Self::new_get(verbose) }
 
     /// Print that we're starting to wait.
     pub fn started(&self, count: usize) {
-        if self.verbose {
-            eprintln!("Waiting for {} responses...", count);
+        match self.direction {
+            Direction::Get => {
+                eprintln!("Waiting for {} responses...", count);
+            }
+            Direction::Put => {
+                eprintln!("Sending to {} participants...", count);
+            }
         }
     }
 
     /// Print a success message.
-    pub fn success(&self, name: &str) {
-        eprintln!("✅ {}", name);
+    pub fn success(&self, name: &str, elapsed_secs: Option<u64>) {
+        // Both get and put show elapsed time if available
+        if let Some(secs) = elapsed_secs {
+            eprintln!("{}  ✅ {}: {}s", self.direction.emoji(), name, secs);
+        } else {
+            eprintln!("{}  ✅ {}", self.direction.emoji(), name);
+        }
     }
 
     /// Print an error message.
     pub fn error(&self, name: &str, error: &str) {
-        eprintln!("❌ {} - {}", name, error);
+        eprintln!("{}  ❌ {}: {}", self.direction.emoji(), name, error);
     }
 
     /// Print a timeout message.
     pub fn timeout(&self, name: &str) {
-        eprintln!("⏱️  {} - timeout", name);
+        eprintln!("{}  ❌ {}: Timeout", self.direction.emoji(), name);
     }
 }
 
@@ -257,19 +468,21 @@ where
 
     // Set up progress display or streaming output
     let progress = if is_interactive {
-        Some(Arc::new(ProgressDisplay::new(
+        let p = Arc::new(ProgressDisplay::new_get(
             &requests
                 .iter()
                 .map(|(xid, _, name)| (*xid, name.clone()))
                 .collect::<Vec<_>>(),
             timeout_secs,
-        )))
+        ));
+        p.start_timer_updates();
+        Some(p)
     } else {
         None
     };
 
     let streaming = if !is_interactive {
-        let s = StreamingOutput::new(true);
+        let s = StreamingOutput::new_get(true);
         s.started(participant_count);
         Some(Arc::new(s))
     } else {
@@ -286,19 +499,6 @@ where
 
     local_set
         .run_until(async {
-            // Spawn countdown updater for interactive mode
-            let countdown_handle = if let Some(ref p) = progress {
-                let progress_clone = Arc::clone(p);
-                Some(tokio::task::spawn_local(async move {
-                    loop {
-                        tokio::time::sleep(Duration::from_secs(1)).await;
-                        progress_clone.update_countdown();
-                    }
-                }))
-            } else {
-                None
-            };
-
             // Spawn all fetch tasks
             let mut handles = Vec::new();
             for (xid, arid, name) in requests {
@@ -327,11 +527,17 @@ where
                     if let Some(ref p) = progress {
                         match &result {
                             Ok(_) => p.mark_success(&xid),
-                            Err(e) => p.mark_error(&xid, &e.to_string()),
+                            Err(e) => {
+                                if e.to_string().contains("Timeout") {
+                                    p.mark_timeout(&xid);
+                                } else {
+                                    p.mark_error(&xid, &e.to_string());
+                                }
+                            }
                         }
                     } else if let Some(ref s) = streaming {
                         match &result {
-                            Ok(_) => s.success(&name),
+                            Ok(_) => s.success(&name, None),
                             Err(e) => {
                                 if e.to_string().contains("Timeout") {
                                     s.timeout(&name);
@@ -350,11 +556,6 @@ where
             // Wait for all tasks
             for handle in handles {
                 let _ = handle.await;
-            }
-
-            // Stop countdown updater
-            if let Some(handle) = countdown_handle {
-                handle.abort();
             }
         })
         .await;
@@ -403,25 +604,30 @@ pub async fn parallel_send(
     let is_interactive = is_interactive_terminal();
     let message_count = messages.len();
 
-    // Set up progress display
+    // Set up progress display for put operations
     let progress = if is_interactive {
-        Some(Arc::new(ProgressDisplay::new(
+        let p = Arc::new(ProgressDisplay::new_put(
             &messages
                 .iter()
                 .map(|(xid, _, _, name)| (*xid, name.clone()))
                 .collect::<Vec<_>>(),
-            60, // 1 minute timeout for sends
-        )))
+        ));
+        p.start_timer_updates();
+        Some(p)
     } else {
         None
     };
 
     let streaming = if !is_interactive {
-        eprintln!("Sending to {} participants...", message_count);
-        Some(Arc::new(StreamingOutput::new(true)))
+        let s = StreamingOutput::new_put(true);
+        s.started(message_count);
+        Some(Arc::new(s))
     } else {
         None
     };
+
+    // Track start time for elapsed calculation in streaming mode
+    let start_time = std::time::Instant::now();
 
     #[allow(clippy::type_complexity)]
     let results: Arc<Mutex<Vec<(XID, Result<()>)>>> =
@@ -438,9 +644,11 @@ pub async fn parallel_send(
                 let results = Arc::clone(&results);
                 let progress = progress.clone();
                 let streaming = streaming.clone();
+                let start = start_time;
 
                 let handle = tokio::task::spawn_local(async move {
                     let result = client.put(&arid, &envelope).await.map(|_| ());
+                    let elapsed = start.elapsed().as_secs();
 
                     if let Some(ref p) = progress {
                         match &result {
@@ -449,7 +657,7 @@ pub async fn parallel_send(
                         }
                     } else if let Some(ref s) = streaming {
                         match &result {
-                            Ok(()) => s.success(&name),
+                            Ok(()) => s.success(&name, Some(elapsed)),
                             Err(e) => s.error(&name, &e.to_string()),
                         }
                     }

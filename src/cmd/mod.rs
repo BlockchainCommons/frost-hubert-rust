@@ -3,6 +3,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
+pub mod busy;
 pub mod check;
 pub mod common;
 pub mod dkg;

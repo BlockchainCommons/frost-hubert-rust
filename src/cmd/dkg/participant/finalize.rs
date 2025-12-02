@@ -13,6 +13,7 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
+        busy::{get_with_indicator, put_with_indicator},
         dkg::common::{
             OptionalStorageSelector, group_state_dir, parse_arid_ur,
             signing_key_from_verifying,
@@ -113,12 +114,14 @@ impl CommandArgs {
             StorageClient::from_selection(selection).await
         })?;
 
-        let request_envelope = runtime.block_on(async {
-            client
-                .get(&listening_at_arid, self.timeout)
-                .await?
-                .context("Finalize request not found in Hubert storage")
-        })?;
+        let request_envelope = get_with_indicator(
+            &runtime,
+            &client,
+            &listening_at_arid,
+            "Finalize request",
+            self.timeout,
+        )?
+        .context("Finalize request not found in Hubert storage")?;
 
         let owner_keys = owner
             .xid_document()
@@ -301,9 +304,13 @@ impl CommandArgs {
             Some(&coordinator_doc),
         )?;
 
-        runtime.block_on(async {
-            client.put(&response_arid, &response_envelope).await
-        })?;
+        put_with_indicator(
+            &runtime,
+            &client,
+            &response_arid,
+            &response_envelope,
+            "Coordinator",
+        )?;
 
         // Update registry contributions
         let group_record = registry

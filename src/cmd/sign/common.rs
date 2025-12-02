@@ -36,15 +36,16 @@ pub fn signing_state_dir(
 
 /// Content wrapper for signFinalize events.
 ///
-/// This wraps an envelope with a unit subject and type assertion "signFinalize",
-/// implementing the traits required by `SealedEvent<T>`.
+/// This wraps an envelope with a unit subject and type assertion
+/// "signFinalize", implementing the traits required by `SealedEvent<T>`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SignFinalizeContent {
     envelope: Envelope,
 }
 
 impl SignFinalizeContent {
-    /// Creates a new SignFinalizeContent with a unit subject and type assertion.
+    /// Creates a new SignFinalizeContent with a unit subject and type
+    /// assertion.
     pub fn new() -> Self {
         Self {
             envelope: Envelope::unit().add_type("signFinalize"),
@@ -62,21 +63,15 @@ impl SignFinalizeContent {
     }
 
     /// Returns the inner envelope.
-    pub fn envelope(&self) -> &Envelope {
-        &self.envelope
-    }
+    pub fn envelope(&self) -> &Envelope { &self.envelope }
 }
 
 impl Default for SignFinalizeContent {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl From<SignFinalizeContent> for Envelope {
-    fn from(content: SignFinalizeContent) -> Self {
-        content.envelope
-    }
+    fn from(content: SignFinalizeContent) -> Self { content.envelope }
 }
 
 impl TryFrom<Envelope> for SignFinalizeContent {

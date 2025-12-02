@@ -12,6 +12,7 @@ use tokio::runtime::Runtime;
 use super::receive::decode_invite_details;
 use crate::{
     cmd::{
+        busy::{get_with_indicator, put_with_indicator},
         dkg::common::{
             OptionalStorageSelector, build_group_participants,
             group_participant_from_registry, group_state_dir, parse_arid_ur,
@@ -224,13 +225,17 @@ impl CommandArgs {
                 Some(&details.invitation.sender()),
             )?;
             let response_target = details.invitation.response_arid();
-            let envelope_to_send = response_envelope.clone();
             let runtime = Runtime::new()?;
-            runtime.block_on(async move {
-                let client = StorageClient::from_selection(selection).await?;
-                client.put(&response_target, &envelope_to_send).await?;
-                Ok::<(), anyhow::Error>(())
+            let client = runtime.block_on(async {
+                StorageClient::from_selection(selection).await
             })?;
+            put_with_indicator(
+                &runtime,
+                &client,
+                &response_target,
+                &response_envelope,
+                "Coordinator",
+            )?;
         } else if self.preview {
             // Show the GSTP response structure without encryption
             let unsealed_envelope =
@@ -259,13 +264,13 @@ fn resolve_invite_envelope(
     if let Some(selection) = selection {
         if let Ok(arid) = parse_arid_ur(invite) {
             let runtime = Runtime::new()?;
-            return runtime.block_on(async move {
-                let client = StorageClient::from_selection(selection).await?;
-                client
-                    .get(&arid, timeout)
-                    .await?
-                    .context("Invite not found in Hubert storage")
-            });
+            let client = runtime.block_on(async {
+                StorageClient::from_selection(selection).await
+            })?;
+            return get_with_indicator(
+                &runtime, &client, &arid, "Invite", timeout,
+            )?
+            .context("Invite not found in Hubert storage");
         }
         if timeout.is_some() {
             bail!(

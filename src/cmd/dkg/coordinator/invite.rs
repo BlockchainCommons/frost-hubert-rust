@@ -9,6 +9,7 @@ use tokio::runtime::Runtime;
 use crate::{
     DkgInvite,
     cmd::{
+        busy::put_with_indicator,
         dkg::common::{OptionalStorageSelector, resolve_participants},
         registry::participants_file_path,
         storage::StorageClient,
@@ -94,11 +95,16 @@ impl CommandArgs {
             let arid = ARID::new();
 
             let runtime = Runtime::new()?;
-            runtime.block_on(async move {
-                let client = StorageClient::from_selection(selection).await?;
-                client.put(&arid, &envelope).await?;
-                Ok::<(), anyhow::Error>(())
+            let client = runtime.block_on(async {
+                StorageClient::from_selection(selection).await
             })?;
+            put_with_indicator(
+                &runtime,
+                &client,
+                &arid,
+                &envelope,
+                "DKG invite",
+            )?;
 
             println!("{}", arid.ur_string());
         } else if self.preview {

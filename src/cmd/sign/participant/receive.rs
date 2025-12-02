@@ -9,6 +9,7 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
+        busy::get_with_indicator,
         dkg::{
             OptionalStorageSelector,
             common::{
@@ -254,13 +255,17 @@ fn resolve_sign_request(
     if let Some(selection) = selection {
         if let Ok(arid) = parse_arid_ur(request) {
             let runtime = Runtime::new()?;
-            return runtime.block_on(async move {
-                let client = StorageClient::from_selection(selection).await?;
-                client
-                    .get(&arid, timeout)
-                    .await?
-                    .context("signInvite request not found in Hubert storage")
-            });
+            let client = runtime.block_on(async {
+                StorageClient::from_selection(selection).await
+            })?;
+            return get_with_indicator(
+                &runtime,
+                &client,
+                &arid,
+                "Sign invite",
+                timeout,
+            )?
+            .context("signInvite request not found in Hubert storage");
         }
         if timeout.is_some() {
             bail!(

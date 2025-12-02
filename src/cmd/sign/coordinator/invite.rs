@@ -10,7 +10,7 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
-        dkg::common::parse_arid_ur, is_verbose,
+        busy::put_with_indicator, dkg::common::parse_arid_ur, is_verbose,
         registry::participants_file_path, sign::common::signing_state_dir,
         storage::StorageClient,
     },
@@ -373,7 +373,7 @@ fn post_to_hubert(
         eprintln!("Posting signInvite request to {}", arid.ur_string());
     }
 
-    runtime.block_on(async { client.put(arid, envelope).await })?;
+    put_with_indicator(&runtime, &client, arid, envelope, "Signing invite")?;
 
     Ok(())
 }

@@ -9,6 +9,7 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
+        busy::get_with_indicator,
         dkg::common::{
             OptionalStorageSelector, group_state_dir, parse_arid_ur,
             signing_key_from_verifying,
@@ -140,9 +141,6 @@ impl CommandArgs {
                     .participant(participant_xid)
                     .and_then(|r| r.pet_name().map(|s| s.to_owned()))
                     .unwrap_or_else(|| participant_xid.ur_string());
-                if is_verbose() {
-                    eprintln!("{}...", name);
-                }
 
                 match fetch_finalize_response(
                     &runtime,
@@ -152,6 +150,7 @@ impl CommandArgs {
                     coordinator_keys,
                     &group_id,
                     participant_xid,
+                    &name,
                 ) {
                     Ok(entry) => match signing_key_from_verifying(
                         entry.public_key_package.verifying_key(),
@@ -282,6 +281,7 @@ struct FinalizeEntry {
     public_key_package: frost_ed25519::keys::PublicKeyPackage,
 }
 
+#[allow(clippy::too_many_arguments)]
 fn fetch_finalize_response(
     runtime: &Runtime,
     client: &StorageClient,
@@ -290,13 +290,16 @@ fn fetch_finalize_response(
     coordinator_keys: &bc_components::PrivateKeys,
     expected_group: &ARID,
     expected_participant: &XID,
+    participant_name: &str,
 ) -> Result<FinalizeEntry> {
-    let envelope = runtime.block_on(async {
-        client
-            .get(response_arid, timeout)
-            .await?
-            .context("Finalize response not found in Hubert storage")
-    })?;
+    let envelope = get_with_indicator(
+        runtime,
+        client,
+        response_arid,
+        participant_name,
+        timeout,
+    )?
+    .context("Finalize response not found in Hubert storage")?;
 
     let now = Date::now();
     let sealed = SealedResponse::try_from_encrypted_envelope(
@@ -508,8 +511,9 @@ fn finalize_collection_results(
     // Validate group verifying key consistency
     let mut group_verifying_key: Option<SigningPublicKey> = None;
     for (xid, data) in &collection.successes {
-        match signing_key_from_verifying(data.public_key_package.verifying_key())
-        {
+        match signing_key_from_verifying(
+            data.public_key_package.verifying_key(),
+        ) {
             Ok(signing_key) => {
                 if let Some(existing) = &group_verifying_key {
                     if existing != &signing_key {

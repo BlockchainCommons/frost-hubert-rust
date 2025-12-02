@@ -17,6 +17,7 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
+        busy::{get_with_indicator, put_with_indicator},
         dkg::{OptionalStorageSelector, common::parse_arid_ur},
         is_verbose,
         parallel::{CollectionResult, ParallelFetchConfig, parallel_fetch},
@@ -140,8 +141,10 @@ impl CommandArgs {
                 );
             }
 
-            let mut commitments: BTreeMap<XID, frost::round1::SigningCommitments> =
-                BTreeMap::new();
+            let mut commitments: BTreeMap<
+                XID,
+                frost::round1::SigningCommitments,
+            > = BTreeMap::new();
             let mut send_to_arids: BTreeMap<XID, ARID> = BTreeMap::new();
             let mut errors: Vec<(XID, String)> = Vec::new();
 
@@ -151,10 +154,6 @@ impl CommandArgs {
                     .and_then(|r| r.pet_name().map(|s| s.to_owned()))
                     .unwrap_or_else(|| participant.ur_string());
 
-                if is_verbose() {
-                    eprintln!("{}...", participant_name);
-                }
-
                 match fetch_commit_response(
                     &runtime,
                     &client,
@@ -163,13 +162,14 @@ impl CommandArgs {
                     owner.xid_document(),
                     participant,
                     &session_id,
+                    &participant_name,
                 ) {
                     Ok((participant_commitments, next_request_arid)) => {
-                        commitments.insert(*participant, participant_commitments);
+                        commitments
+                            .insert(*participant, participant_commitments);
                         send_to_arids.insert(*participant, next_request_arid);
                     }
                     Err(e) => {
-                        eprintln!("error: {}", e);
                         errors.push((*participant, e.to_string()));
                     }
                 }
@@ -190,7 +190,10 @@ impl CommandArgs {
                     .filter(|xid| !commitments.contains_key(*xid))
                     .map(|xid| xid.ur_string())
                     .collect();
-                bail!("Missing signInvite responses from: {}", missing.join(", "));
+                bail!(
+                    "Missing signInvite responses from: {}",
+                    missing.join(", ")
+                );
             }
 
             // Persist aggregated commitments for this session
@@ -272,6 +275,11 @@ impl CommandArgs {
                         "participant present in start state after earlier validation",
                     );
 
+                let participant_name = registry
+                    .participant(participant)
+                    .and_then(|r| r.pet_name().map(|s| s.to_owned()))
+                    .unwrap_or_else(|| participant.ur_string());
+
                 let recipient_doc = if *participant == owner.xid() {
                     owner.xid_document().clone()
                 } else {
@@ -286,37 +294,41 @@ impl CommandArgs {
                         })?
                 };
 
-            let request = build_sign_share_request(
-                owner.xid_document(),
-                &group_id,
-                &session_id,
-                participant_state.share_arid,
-                &commitments,
-            )?;
+                let request = build_sign_share_request(
+                    owner.xid_document(),
+                    &group_id,
+                    &session_id,
+                    participant_state.share_arid,
+                    &commitments,
+                )?;
 
-            if self.preview_share && !preview_printed {
-                let preview = request.to_envelope(
+                if self.preview_share && !preview_printed {
+                    let preview = request.to_envelope(
+                        Some(valid_until),
+                        Some(signer_keys),
+                        None,
+                    )?;
+                    println!(
+                        "# signRound2 preview for {}",
+                        participant.ur_string()
+                    );
+                    println!("{}", preview.format());
+                    preview_printed = true;
+                }
+
+                let sealed_envelope = request.to_envelope_for_recipients(
                     Some(valid_until),
                     Some(signer_keys),
-                    None,
+                    &[&recipient_doc],
                 )?;
-                println!(
-                    "# signRound2 preview for {}",
-                    participant.ur_string()
-                );
-                println!("{}", preview.format());
-                preview_printed = true;
-            }
 
-            let sealed_envelope = request.to_envelope_for_recipients(
-                Some(valid_until),
-                Some(signer_keys),
-                &[&recipient_doc],
-            )?;
-
-            runtime.block_on(async {
-                client.put(send_to_arid, &sealed_envelope).await
-            })?;
+                put_with_indicator(
+                    &runtime,
+                    &client,
+                    send_to_arid,
+                    &sealed_envelope,
+                    &participant_name,
+                )?;
             }
 
             let display_path = std::env::current_dir()
@@ -332,7 +344,10 @@ impl CommandArgs {
                     commitments.len(),
                     display_path.display()
                 );
-                eprintln!("Dispatched {} signRound2 requests.", commitments.len());
+                eprintln!(
+                    "Dispatched {} signRound2 requests.",
+                    commitments.len()
+                );
             } else {
                 println!("{}", display_path.display());
             }
@@ -342,6 +357,7 @@ impl CommandArgs {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn fetch_commit_response(
     runtime: &Runtime,
     client: &StorageClient,
@@ -350,13 +366,16 @@ fn fetch_commit_response(
     coordinator: &XIDDocument,
     expected_sender: &XID,
     expected_session_id: &ARID,
+    participant_name: &str,
 ) -> Result<(frost::round1::SigningCommitments, ARID)> {
-    let envelope = runtime.block_on(async {
-        client
-            .get(response_arid, timeout)
-            .await?
-            .context("Response not found in Hubert storage")
-    })?;
+    let envelope = get_with_indicator(
+        runtime,
+        client,
+        response_arid,
+        participant_name,
+        timeout,
+    )?
+    .context("Response not found in Hubert storage")?;
 
     let coordinator_private_keys =
         coordinator.inception_private_keys().ok_or_else(|| {
@@ -867,9 +886,8 @@ fn process_sign_round1_collection(
         ));
     }
 
-    let send_results = runtime.block_on(async {
-        parallel_send(client, messages).await
-    });
+    let send_results =
+        runtime.block_on(async { parallel_send(client, messages).await });
 
     // Check for send failures
     let failures: Vec<_> = send_results

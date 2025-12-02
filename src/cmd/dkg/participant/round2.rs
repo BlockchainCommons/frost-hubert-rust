@@ -13,6 +13,7 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
+        busy::{get_with_indicator, put_with_indicator},
         dkg::common::{
             OptionalStorageSelector, group_state_dir, parse_arid_ur,
         },
@@ -105,12 +106,14 @@ impl CommandArgs {
         })?;
 
         // Fetch the Round 2 request from where we're listening
-        let request_envelope = runtime.block_on(async {
-            client
-                .get(&listening_at_arid, self.timeout)
-                .await?
-                .context("Round 2 request not found in Hubert storage")
-        })?;
+        let request_envelope = get_with_indicator(
+            &runtime,
+            &client,
+            &listening_at_arid,
+            "Round 2 request",
+            self.timeout,
+        )?
+        .context("Round 2 request not found in Hubert storage")?;
 
         // Decrypt and validate the request
         let owner_private_keys = owner
@@ -254,9 +257,13 @@ impl CommandArgs {
         )?;
 
         // Post the response
-        runtime.block_on(async {
-            client.put(&response_arid, &response_envelope).await
-        })?;
+        put_with_indicator(
+            &runtime,
+            &client,
+            &response_arid,
+            &response_envelope,
+            "Coordinator",
+        )?;
 
         // Update contributions in registry
         let group_record = registry

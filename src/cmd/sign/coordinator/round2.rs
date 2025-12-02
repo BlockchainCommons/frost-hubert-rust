@@ -16,6 +16,7 @@ use tokio::runtime::Runtime;
 
 use crate::{
     cmd::{
+        busy::{get_with_indicator, put_with_indicator},
         dkg::common::{parse_arid_ur, signing_key_from_verifying},
         is_verbose,
         parallel::{CollectionResult, ParallelFetchConfig, parallel_fetch},
@@ -107,133 +108,139 @@ impl CommandArgs {
         let xid_to_identifier = xid_identifier_map(&start_state.participants)?;
 
         // Collect signature shares - either parallel or sequential
-        let (signature_shares_by_identifier, signature_shares_by_xid, finalize_arids) =
-            if self.parallel {
-                // Parallel collection path
-                let client = Arc::new(client);
-                let collection = runtime.block_on(async {
-                    collect_shares_parallel(
-                        Arc::clone(&client),
-                        &registry,
-                        &commitments_state,
-                        owner.xid_document(),
-                        &session_id,
-                        self.timeout,
-                    )
-                    .await
-                })?;
+        let (
+            signature_shares_by_identifier,
+            signature_shares_by_xid,
+            finalize_arids,
+        ) = if self.parallel {
+            // Parallel collection path
+            let client = Arc::new(client);
+            let collection = runtime.block_on(async {
+                collect_shares_parallel(
+                    Arc::clone(&client),
+                    &registry,
+                    &commitments_state,
+                    owner.xid_document(),
+                    &session_id,
+                    self.timeout,
+                )
+                .await
+            })?;
 
-                if !collection.all_succeeded() {
-                    // Report failures
-                    if !collection.rejections.is_empty() {
-                        eprintln!("\nRejections:");
-                        for (xid, reason) in &collection.rejections {
-                            eprintln!("  {}: {}", xid.ur_string(), reason);
-                        }
+            if !collection.all_succeeded() {
+                // Report failures
+                if !collection.rejections.is_empty() {
+                    eprintln!("\nRejections:");
+                    for (xid, reason) in &collection.rejections {
+                        eprintln!("  {}: {}", xid.ur_string(), reason);
                     }
-                    if !collection.errors.is_empty() {
-                        eprintln!("\nErrors:");
-                        for (xid, error) in &collection.errors {
-                            eprintln!("  {}: {}", xid.ur_string(), error);
-                        }
-                    }
-                    if !collection.timeouts.is_empty() {
-                        eprintln!("\nTimeouts:");
-                        for xid in &collection.timeouts {
-                            eprintln!("  {}", xid.ur_string());
-                        }
-                    }
-                    bail!(
-                        "Signature share collection incomplete: {} succeeded, {} rejected, {} errors, {} timeouts",
-                        collection.successes.len(),
-                        collection.rejections.len(),
-                        collection.errors.len(),
-                        collection.timeouts.len()
-                    );
                 }
-
-                // Convert collection to maps
-                let mut by_id = BTreeMap::new();
-                let mut by_xid = BTreeMap::new();
-                let mut fin_arids = HashMap::new();
-                for (xid, data) in collection.successes {
-                    let identifier = xid_to_identifier
-                        .get(&xid)
-                        .context("Identifier mapping missing for participant")?;
-                    by_id.insert(*identifier, data.signature_share);
-                    by_xid.insert(xid, data.signature_share);
-                    fin_arids.insert(xid, data.finalize_arid);
+                if !collection.errors.is_empty() {
+                    eprintln!("\nErrors:");
+                    for (xid, error) in &collection.errors {
+                        eprintln!("  {}: {}", xid.ur_string(), error);
+                    }
                 }
+                if !collection.timeouts.is_empty() {
+                    eprintln!("\nTimeouts:");
+                    for xid in &collection.timeouts {
+                        eprintln!("  {}", xid.ur_string());
+                    }
+                }
+                bail!(
+                    "Signature share collection incomplete: {} succeeded, {} rejected, {} errors, {} timeouts",
+                    collection.successes.len(),
+                    collection.rejections.len(),
+                    collection.errors.len(),
+                    collection.timeouts.len()
+                );
+            }
 
-                // Continue with sequential finalize dispatch
-                let client = Arc::try_unwrap(client)
-                    .map_err(|_| anyhow::anyhow!("Failed to unwrap client"))?;
-                process_aggregation_and_finalize(
+            // Convert collection to maps
+            let mut by_id = BTreeMap::new();
+            let mut by_xid = BTreeMap::new();
+            let mut fin_arids = HashMap::new();
+            for (xid, data) in collection.successes {
+                let identifier = xid_to_identifier
+                    .get(&xid)
+                    .context("Identifier mapping missing for participant")?;
+                by_id.insert(*identifier, data.signature_share);
+                by_xid.insert(xid, data.signature_share);
+                fin_arids.insert(xid, data.finalize_arid);
+            }
+
+            // Continue with sequential finalize dispatch
+            let client = Arc::try_unwrap(client)
+                .map_err(|_| anyhow::anyhow!("Failed to unwrap client"))?;
+            process_aggregation_and_finalize(
+                &runtime,
+                &client,
+                &registry,
+                &owner,
+                &registry_path,
+                &group_id,
+                &session_id,
+                &start_state,
+                &commitments_state,
+                &xid_to_identifier,
+                by_id,
+                by_xid,
+                fin_arids,
+                self.preview_finalize,
+            )?;
+
+            return Ok(());
+        } else {
+            // Sequential path (original behavior)
+            if is_verbose() {
+                eprintln!(
+                    "Collecting signature shares for session {} from {} participants...",
+                    session_id.ur_string(),
+                    commitments_state.commitments.len()
+                );
+            }
+
+            let mut signature_shares_by_identifier: BTreeMap<
+                frost::Identifier,
+                frost::round2::SignatureShare,
+            > = BTreeMap::new();
+            let mut signature_shares_by_xid: BTreeMap<
+                XID,
+                frost::round2::SignatureShare,
+            > = BTreeMap::new();
+            let mut finalize_arids: HashMap<XID, ARID> = HashMap::new();
+
+            for (xid, entry) in &commitments_state.commitments {
+                let participant_name = registry
+                    .participant(xid)
+                    .and_then(|r| r.pet_name().map(|s| s.to_owned()))
+                    .unwrap_or_else(|| xid.ur_string());
+
+                let identifier = xid_to_identifier
+                    .get(xid)
+                    .context("Identifier mapping missing for participant")?;
+                let (signature_share, finalize_arid) = fetch_share_response(
                     &runtime,
                     &client,
-                    &registry,
-                    &owner,
-                    &registry_path,
-                    &group_id,
+                    &entry.share_arid,
+                    self.timeout,
+                    owner.xid_document(),
+                    xid,
                     &session_id,
-                    &start_state,
-                    &commitments_state,
-                    &xid_to_identifier,
-                    by_id,
-                    by_xid,
-                    fin_arids,
-                    self.preview_finalize,
+                    &participant_name,
                 )?;
+                signature_shares_by_identifier
+                    .insert(*identifier, signature_share);
+                signature_shares_by_xid.insert(*xid, signature_share);
+                finalize_arids.insert(*xid, finalize_arid);
+            }
 
-                return Ok(());
-            } else {
-                // Sequential path (original behavior)
-                if is_verbose() {
-                    eprintln!(
-                        "Collecting signature shares for session {} from {} participants...",
-                        session_id.ur_string(),
-                        commitments_state.commitments.len()
-                    );
-                }
-
-                let mut signature_shares_by_identifier: BTreeMap<
-                    frost::Identifier,
-                    frost::round2::SignatureShare,
-                > = BTreeMap::new();
-                let mut signature_shares_by_xid: BTreeMap<
-                    XID,
-                    frost::round2::SignatureShare,
-                > = BTreeMap::new();
-                let mut finalize_arids: HashMap<XID, ARID> = HashMap::new();
-
-                for (xid, entry) in &commitments_state.commitments {
-                    let participant_name = registry
-                        .participant(xid)
-                        .and_then(|r| r.pet_name().map(|s| s.to_owned()))
-                        .unwrap_or_else(|| xid.ur_string());
-                    if is_verbose() {
-                        eprintln!("{participant_name}...");
-                    }
-
-                    let identifier = xid_to_identifier
-                        .get(xid)
-                        .context("Identifier mapping missing for participant")?;
-                    let (signature_share, finalize_arid) = fetch_share_response(
-                        &runtime,
-                        &client,
-                        &entry.share_arid,
-                        self.timeout,
-                        owner.xid_document(),
-                        xid,
-                        &session_id,
-                    )?;
-                    signature_shares_by_identifier.insert(*identifier, signature_share);
-                    signature_shares_by_xid.insert(*xid, signature_share);
-                    finalize_arids.insert(*xid, finalize_arid);
-                }
-
-                (signature_shares_by_identifier, signature_shares_by_xid, finalize_arids)
-            };
+            (
+                signature_shares_by_identifier,
+                signature_shares_by_xid,
+                finalize_arids,
+            )
+        };
 
         if signature_shares_by_identifier.len() < start_state.min_signers {
             bail!(
@@ -334,6 +341,11 @@ impl CommandArgs {
 
         let mut preview_printed = false;
         for (participant, finalize_arid) in &finalize_arids {
+            let participant_name = registry
+                .participant(participant)
+                .and_then(|r| r.pet_name().map(|s| s.to_owned()))
+                .unwrap_or_else(|| participant.ur_string());
+
             let recipient_doc: XIDDocument = if *participant == owner.xid() {
                 owner.xid_document().clone()
             } else {
@@ -375,8 +387,13 @@ impl CommandArgs {
                 &[&recipient_doc],
             )?;
 
-            runtime
-                .block_on(async { client.put(finalize_arid, &sealed).await })?;
+            put_with_indicator(
+                &runtime,
+                &client,
+                finalize_arid,
+                &sealed,
+                &participant_name,
+            )?;
         }
 
         // Print the final signature and signed envelope UR after all dispatches
@@ -387,6 +404,7 @@ impl CommandArgs {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn fetch_share_response(
     runtime: &Runtime,
     client: &StorageClient,
@@ -395,13 +413,16 @@ fn fetch_share_response(
     coordinator: &XIDDocument,
     expected_sender: &XID,
     expected_session_id: &ARID,
+    participant_name: &str,
 ) -> Result<(frost::round2::SignatureShare, ARID)> {
-    let envelope = runtime.block_on(async {
-        client
-            .get(response_arid, timeout)
-            .await?
-            .context("Signature share response not found in Hubert storage")
-    })?;
+    let envelope = get_with_indicator(
+        runtime,
+        client,
+        response_arid,
+        participant_name,
+        timeout,
+    )?
+    .context("Signature share response not found in Hubert storage")?;
 
     let coordinator_private_keys =
         coordinator.inception_private_keys().ok_or_else(|| {
@@ -981,10 +1002,8 @@ fn process_aggregation_and_finalize(
                 .context("Invalid target UR in start state")?;
         start_state_target.subject().digest()
     };
-    let signing_package = frost::SigningPackage::new(
-        signing_commitments,
-        target_digest.data(),
-    );
+    let signing_package =
+        frost::SigningPackage::new(signing_commitments, target_digest.data());
 
     // Public key package from finalize collection
     let public_key_package = load_public_key_package(registry_path, group_id)?;
@@ -1000,10 +1019,10 @@ fn process_aggregation_and_finalize(
 
     // Verify aggregated signature against target digest before dispatch
     let sig_bytes_vec = signature.serialize()?;
-    let sig_array: [u8; 64] =
-        sig_bytes_vec.as_slice().try_into().map_err(|_| {
-            anyhow::anyhow!("Aggregated signature is not 64 bytes")
-        })?;
+    let sig_array: [u8; 64] = sig_bytes_vec
+        .as_slice()
+        .try_into()
+        .map_err(|_| anyhow::anyhow!("Aggregated signature is not 64 bytes"))?;
     let final_signature =
         bc_components::Signature::ed25519_from_data(sig_array);
     let signature_ur = final_signature.ur_string();
@@ -1056,6 +1075,11 @@ fn process_aggregation_and_finalize(
 
     let mut preview_printed = false;
     for (participant, finalize_arid) in &finalize_arids {
+        let participant_name = registry
+            .participant(participant)
+            .and_then(|r| r.pet_name().map(|s| s.to_owned()))
+            .unwrap_or_else(|| participant.ur_string());
+
         let recipient_doc: XIDDocument = if *participant == owner.xid() {
             owner.xid_document().clone()
         } else {
@@ -1077,12 +1101,8 @@ fn process_aggregation_and_finalize(
         )?;
 
         if preview_finalize && !preview_printed {
-            let preview =
-                event.to_envelope(None, Some(signer_keys), None)?;
-            println!(
-                "# signFinalize preview for {}",
-                participant.ur_string()
-            );
+            let preview = event.to_envelope(None, Some(signer_keys), None)?;
+            println!("# signFinalize preview for {}", participant.ur_string());
             println!("{}", preview.format());
             preview_printed = true;
         }
@@ -1093,7 +1113,13 @@ fn process_aggregation_and_finalize(
             &[&recipient_doc],
         )?;
 
-        runtime.block_on(async { client.put(finalize_arid, &sealed).await })?;
+        put_with_indicator(
+            runtime,
+            client,
+            finalize_arid,
+            &sealed,
+            &participant_name,
+        )?;
     }
 
     // Print the final signature and signed envelope UR after all dispatches
