@@ -14,7 +14,7 @@ pub mod storage;
 
 /// FROST command-line interface definition.
 #[derive(Debug, Parser)]
-#[command(author, version, about = "FROST command line toolkit")]
+#[command(author, version, about = "FROST over Hubert command-line tool")]
 #[command(infer_subcommands = true)]
 pub struct Cli {
     /// Enable verbose output for hubert interactions and progress messages

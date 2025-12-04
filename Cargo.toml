@@ -1,11 +1,11 @@
 [package]
-name = "frost"
+name = "frost-hubert"
 version = "0.1.0"
 edition = "2024"
-description = "Command-line helper for managing FROST participants"
+description = "Command-line tool for FROST DKG and signing using Hubert as the distributed substrate"
 authors = ["Blockchain Commons"]
 license = "BSD-2-Clause-Patent"
-repository = "https://github.com/BlockchainCommons/bc-rust"
+repository = "https://github.com/BlockchainCommons/frost-hubert-rust"
 readme = "README.md"
 keywords = ["cli", "frost", "xid"]
 categories = ["cryptography", "command-line-utilities"]
@@ -18,16 +18,16 @@ path = "src/main.rs"
 [dependencies]
 anyhow = "^1.0.0"
 clap = { version = "^4.4.3", features = ["derive"] }
-bc-components = "^0.28.0"
-bc-envelope = { version = "^0.37.0", features = ["multithreaded"] }
-bc-xid = "^0.16.0"
-provenance-mark = "0.16.0"
+bc-components = "^0.29.0"
+bc-envelope = { version = "^0.38.0", features = ["multithreaded"] }
+bc-xid = "^0.17.0"
+provenance-mark = "0.17.0"
 serde = { version = "^1.0.0", features = ["derive"] }
 serde_json = "^1.0.135"
-gstp = "^0.11.0"
+gstp = "^0.12.0"
 frost-ed25519 = "2.1.0"
-hubert = "^0.3.0"
-bc-ur = "^0.16.0"
+hubert = "^0.4.0"
+bc-ur = "^0.17.0"
 mainline = "6"
 reqwest = "0.12"
 tokio = { version = "1", features = ["rt-multi-thread", "time", "sync"] }

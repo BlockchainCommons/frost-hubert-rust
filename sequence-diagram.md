@@ -26,7 +26,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant S as Signal
-    participant H as Hubert
+    participant H as Hubert<br/>(Dead Drop)
     actor A as Alice<br/>(Coordinator)
     actor B as Bob
     actor C as Carol
@@ -98,7 +98,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant S as Signal
-    participant H as Hubert
+    participant H as Hubert<br/>(Dead Drop)
     actor A as Alice<br/>(Coordinator)
     actor B as Bob
     actor C as Carol

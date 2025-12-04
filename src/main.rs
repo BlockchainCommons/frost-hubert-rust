@@ -1,3 +1,3 @@
 use anyhow::Result;
 
-fn main() -> Result<()> { frost::run() }
+fn main() -> Result<()> { frost_hubert::run() }

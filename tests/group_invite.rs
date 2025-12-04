@@ -9,7 +9,7 @@ use bc_xid::{
     XIDDocument, XIDGeneratorOptions, XIDGenesisMarkOptions,
     XIDInceptionKeyOptions, XIDPrivateKeyOptions, XIDSigningOptions,
 };
-use frost::{DkgInvitation, DkgInvitationResult, DkgInvite};
+use frost_hubert::{DkgInvitation, DkgInvitationResult, DkgInvite};
 use gstp::SealedRequestBehavior;
 use indoc::indoc;
 use provenance_mark::ProvenanceMarkResolution;
